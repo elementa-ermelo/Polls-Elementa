@@ -77,9 +77,9 @@
         .nav-user {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 0;
             text-decoration: none;
-            padding: 6px 12px;
+            padding: 6px;
             border-radius: 10px;
             font-size: 14px;
             font-weight: 600;
@@ -327,7 +327,6 @@
             @else
                 <div class="nav-avatar-placeholder">{{ substr(auth()->user()->name, 0, 1) }}</div>
             @endif
-            {{ auth()->user()->name }}
         </a>
 
         <div class="nav-divider"></div>
