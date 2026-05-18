@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git reset *)",
+      "Bash(rm -rf storage/framework/cache/* storage/framework/views/* bootstrap/cache/*.php)",
+      "Bash(php artisan *)"
+    ]
+  }
+}
