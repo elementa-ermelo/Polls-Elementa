@@ -500,7 +500,7 @@
   ),
   'logging' => 
   array (
-    'default' => 'stack',
+    'default' => 'daily',
     'deprecations' => 
     array (
       'channel' => NULL,
@@ -781,7 +781,7 @@
   ),
   'session' => 
   array (
-    'driver' => 'cookie',
+    'driver' => 'database',
     'lifetime' => 1440,
     'expire_on_close' => false,
     'encrypt' => false,
