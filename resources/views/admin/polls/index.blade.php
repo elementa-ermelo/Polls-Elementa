@@ -6,7 +6,28 @@
         <h1 style="margin-bottom: 4px;">Mijn Polls</h1>
         <p class="meta">Beheer en analyseer je polls</p>
     </div>
-    <a class="btn btn-primary" href="{{ route('admin.polls.create') }}">+ Nieuwe poll</a>
+    <button class="btn btn-primary" onclick="createPoll()">+ Nieuwe poll</button>
+
+    <script>
+    function createPoll() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ route("admin.polls.store") }}';
+
+        form.innerHTML = `
+            {{ csrf_field() }}
+            <input type="hidden" name="title" value="Poll">
+            <input type="hidden" name="question" value="">
+            <input type="hidden" name="type" value="single">
+            <input type="hidden" name="status" value="active">
+            <input type="hidden" name="is_public" value="1">
+            <input type="hidden" name="questions_json" value="[]">
+        `;
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+    </script>
 </div>
 
 <div class="card">
