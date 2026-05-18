@@ -33,6 +33,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function (): v
     Route::resource('users', UserController::class);
 
     Route::get('/polls', [AdminPollController::class, 'index'])->name('polls.index');
+    Route::post('/polls/quick-create', [AdminPollController::class, 'quickCreate'])->name('polls.quick-create');
     Route::get('/polls/create', [AdminPollController::class, 'create'])->name('polls.create');
     Route::post('/polls', [AdminPollController::class, 'store'])->name('polls.store');
     Route::get('/polls/{poll}', [AdminPollController::class, 'show'])->name('polls.show');

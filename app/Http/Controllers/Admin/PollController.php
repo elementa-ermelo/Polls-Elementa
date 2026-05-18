@@ -8,9 +8,11 @@ use App\Models\Poll;
 use App\Models\PollQuestion;
 use App\Models\Vote;
 use App\Support\PollType;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class PollController extends Controller
@@ -52,54 +54,105 @@ class PollController extends Controller
         ]);
     }
 
+    public function quickCreate(): JsonResponse
+    {
+        $poll = Poll::create([
+            'title' => 'Nieuwe poll',
+            'question' => '',
+            'type' => 'single',
+            'status' => 'active',
+            'is_public' => true,
+            'user_id' => auth()->id(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'redirect' => route('admin.polls.show', $poll),
+        ]);
+    }
+
     public function store(StorePollRequest $request): RedirectResponse
     {
-        $poll = DB::transaction(function () use ($request) {
-            $status = $request->validated('status');
-            $isPublic = (bool) $request->boolean('is_public');
-            $accessCode = $request->input('access_code');
-            
-            // Generate unique access code if provided
-            if ($accessCode && strlen($accessCode) > 0) {
-                $accessCode = strtoupper(str_replace(' ', '', $accessCode));
-            } else {
-                $accessCode = null;
-            }
+        Log::info('Nieuwe poll aanmaakverzoek ontvangen', [
+            'user_id' => auth()->id(),
+            'title' => $request->validated('title'),
+        ]);
 
-            $poll = Poll::query()->create([
-                'title' => $request->validated('title'),
-                'question' => (string) ($request->validated('question') ?? ''),
-                'type' => $request->validated('type') ?? 'closed',
-                'status' => $status,
-                'opens_at' => $request->validated('opens_at'),
-                'closes_at' => $request->validated('closes_at'),
-                'is_public' => $isPublic,
-                'access_code' => $accessCode,
-                'user_id' => auth()->id(),
+        try {
+            $poll = DB::transaction(function () use ($request) {
+                $status = $request->validated('status');
+                $isPublic = (bool) $request->boolean('is_public');
+                $accessCode = $request->input('access_code');
+                
+                // Generate unique access code if provided
+                if ($accessCode && strlen($accessCode) > 0) {
+                    $accessCode = strtoupper(str_replace(' ', '', $accessCode));
+                } else {
+                    $accessCode = null;
+                }
+
+                $poll = Poll::query()->create([
+                    'title' => $request->validated('title'),
+                    'question' => (string) ($request->validated('question') ?? ''),
+                    'type' => $request->validated('type') ?? 'closed',
+                    'status' => $status,
+                    'opens_at' => $request->validated('opens_at'),
+                    'closes_at' => $request->validated('closes_at'),
+                    'is_public' => $isPublic,
+                    'access_code' => $accessCode,
+                    'user_id' => auth()->id(),
+                ]);
+
+                Log::info('Poll aangemaakt in database', [
+                    'poll_id' => $poll->id,
+                    'title' => $poll->title,
+                    'user_id' => auth()->id(),
+                ]);
+
+                // Process questions from JSON
+                $questionsJson = $request->input('questions_json', '{}');
+                try {
+                    $questions = json_decode($questionsJson, true) ?? [];
+                    
+                    foreach ($questions as $qData) {
+                        $question = $poll->questions()->create([
+                            'question' => $qData['question'] ?? '',
+                            'type' => $qData['type'] ?? $poll->type,
+                            'position' => $qData['position'] ?? 0,
+                        ]);
+                        
+                        $this->syncQuestionOptions($question, implode("\n", $qData['options'] ?? []));
+                    }
+
+                    Log::info('Vragen en opties verwerkt', [
+                        'poll_id' => $poll->id,
+                        'question_count' => count($questions),
+                    ]);
+                } catch (\Throwable $e) {
+                    Log::warning('Fout bij verwerken vragen JSON', [
+                        'poll_id' => $poll->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+
+                return $poll;
+            });
+
+            Log::info('Poll succesvol aangemaakt', [
+                'poll_id' => $poll->id,
+                'title' => $poll->title,
             ]);
 
-            // Process questions from JSON
-            $questionsJson = $request->input('questions_json', '{}');
-            try {
-                $questions = json_decode($questionsJson, true) ?? [];
-                
-                foreach ($questions as $qData) {
-                    $question = $poll->questions()->create([
-                        'question' => $qData['question'] ?? '',
-                        'type' => $qData['type'] ?? $poll->type,
-                        'position' => $qData['position'] ?? 0,
-                    ]);
-                    
-                    $this->syncQuestionOptions($question, implode("\n", $qData['options'] ?? []));
-                }
-            } catch (\Throwable $e) {
-                // Invalid JSON, skip
-            }
+            return redirect()->route('admin.polls.show', $poll)->with('success', 'Poll aangemaakt! 🎉');
+        } catch (\Throwable $e) {
+            Log::error('Fout bij aanmaken poll', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
 
-            return $poll;
-        });
-
-        return redirect()->route('admin.polls.show', $poll)->with('success', 'Poll aangemaakt! 🎉');
+            return redirect()->back()->withErrors(['error' => 'Fout bij aanmaken poll: ' . $e->getMessage()]);
+        }
     }
 
     public function show(Poll $poll): View
