@@ -22,3 +22,11 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+/Polls-Elementa
+/MailHog.exe
+/mail_test.php
+/test_temp.php
+/polls-elementa.zip
+/index.php
+/bootstrap/cache/*.php
