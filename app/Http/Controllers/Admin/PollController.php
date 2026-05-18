@@ -57,6 +57,14 @@ class PollController extends Controller
         $poll = DB::transaction(function () use ($request) {
             $status = $request->validated('status');
             $isPublic = (bool) $request->boolean('is_public');
+            $accessCode = $request->input('access_code');
+            
+            // Generate unique access code if provided
+            if ($accessCode && strlen($accessCode) > 0) {
+                $accessCode = strtoupper(str_replace(' ', '', $accessCode));
+            } else {
+                $accessCode = null;
+            }
 
             $poll = Poll::query()->create([
                 'title' => $request->validated('title'),
@@ -66,6 +74,7 @@ class PollController extends Controller
                 'opens_at' => $request->validated('opens_at'),
                 'closes_at' => $request->validated('closes_at'),
                 'is_public' => $isPublic,
+                'access_code' => $accessCode,
                 'user_id' => auth()->id(),
             ]);
 
@@ -150,6 +159,14 @@ class PollController extends Controller
 
         return DB::transaction(function () use ($request, $poll) {
             $status = $request->validated('status');
+            $accessCode = $request->input('access_code');
+            
+            // Generate unique access code if provided
+            if ($accessCode && strlen($accessCode) > 0) {
+                $accessCode = strtoupper(str_replace(' ', '', $accessCode));
+            } else {
+                $accessCode = null;
+            }
 
             $poll->update([
                 'title' => $request->validated('title'),
@@ -159,6 +176,7 @@ class PollController extends Controller
                 'opens_at' => $request->validated('opens_at'),
                 'closes_at' => $request->validated('closes_at'),
                 'is_public' => $status !== 'archived',
+                'access_code' => $accessCode,
             ]);
 
             return redirect()->route('admin.polls.show', $poll)->with('success', 'Poll bijgewerkt.');

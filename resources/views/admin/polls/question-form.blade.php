@@ -14,8 +14,15 @@
 
     <div class="field">
         <label for="question">Vraag</label>
-        <textarea id="question" name="question" rows="2" required>{{ old('question', $question->question) }}</textarea>
+        <div style="display: flex; gap: 8px; align-items: flex-start;">
+            <textarea id="question" name="question" rows="2" required style="flex: 1;">{{ old('question', $question->question) }}</textarea>
+            <button type="button" class="btn" id="add-help-btn" style="padding: 8px 12px; margin-top: 4px; white-space: nowrap; font-size: 20px;" title="Voeg extra informatie toe">
+                ℹ️
+            </button>
+        </div>
     </div>
+
+    <input type="hidden" id="help_text" name="help_text" value="{{ old('help_text', $question->help_text ?? '') }}">
 
     <div class="field">
         <label for="type">Type poll</label>
@@ -27,7 +34,6 @@
     </div>
 
     <div class="field">
-        <label>Antwoordopties</label>
         <p class="meta" id="options-help" style="margin-top: 0;">Standaardopties worden geladen op basis van het gekozen type. Je kunt ze daarna aanpassen.</p>
         <div id="option-fields" class="grid" style="gap: 8px;"></div>
         <div class="inline" style="margin-top: 10px;">

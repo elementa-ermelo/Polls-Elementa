@@ -25,7 +25,8 @@
 
         <div class="field">
             <label for="question">Beschrijving <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
-            <textarea id="question" name="question" rows="2" placeholder="Extra toelichting bij de poll…">{{ old('question', $poll->question) }}</textarea>
+            <textarea id="question" name="question" rows="3" placeholder="Voeg hier een beschrijving of toelichting in...">{{ old('question', $poll->question ?? '') }}</textarea>
+            @error('question')<p class="field-error">{{ $message }}</p>@enderror
         </div>
 
         <div class="field" style="max-width:280px;">
@@ -48,6 +49,12 @@
             </div>
         </div>
         @error('closes_at')<p class="field-error">{{ $message }}</p>@enderror
+
+        <div class="field" style="max-width:280px;">
+            <label for="access_code">Toegangscode <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+            <input id="access_code" type="text" name="access_code" placeholder="Laat leeg voor openbare poll" value="{{ old('access_code', $poll->access_code ?? '') }}" style="text-transform:uppercase;">
+            <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Als je een code instelt, moeten deelnemers deze invoeren om de poll in te vullen.</p>
+        </div>
     </div>
 
     {{-- Vragen --}}

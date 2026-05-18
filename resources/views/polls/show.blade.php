@@ -22,6 +22,34 @@
 </div>
 @endif
 
+{{-- Introductie --}}
+<div class="card" style="margin-bottom:24px; padding:24px; background:linear-gradient(135deg, var(--accent) 0%, #a7d8de 100%); color:#fff; border:none;">
+    <h2 style="margin:0 0 12px; font-size:18px; font-weight:700; color:#fff;">❓ Welkom bij deze poll</h2>
+    <p style="margin:0 0 8px; line-height:1.6; font-size:15px; color:#fff;">
+        We willen graag jouw eerlijke mening horen. Door deze vragen in te vullen, help je ons inzichten te verzamelen.
+    </p>
+</div>
+
+{{-- Info over het proces --}}
+<div class="card" style="margin-bottom:16px; padding:20px; background:#dbeafe; border:1px solid #bfdbfe;">
+    <h3 style="margin:0 0 12px; color:var(--primary); display:flex; align-items:center; gap:8px;">
+        <span>💡</span> Hoe werkt het indienen?
+    </h3>
+    <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
+        <strong>1. Vul je gegevens in</strong> — We vragen je naam, e-mailadres, telefoonnummer en leeftijd zodat we kunnen verifiëren dat je echt bent.
+    </p>
+    <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
+        <strong>2. Beantwoord de vragen</strong> — Geef je eerlijke mening.
+    </p>
+    <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
+        <strong>3. Verstuur en bevestig</strong> — Na verzending krijg je direct een e-mail met een bevestigingslink. 
+        Klik erop binnen 24 uur en je stem telt mee! 📧
+    </p>
+    <p style="margin:0; color:#1e40af; font-size:13px; opacity:0.9; font-style:italic;">
+        ✨ Jouw perspective is waardevol — bedankt dat je meedoet!
+    </p>
+</div>
+
 {{-- Poll header --}}
 <div class="card" style="margin-bottom:16px; padding:24px;">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
@@ -55,7 +83,27 @@
     @endif
 </div>
 
-@if($poll->isOpen())
+@if($needsAccessCode)
+    {{-- Access Code Form --}}
+    <div class="card" style="margin-bottom:16px; padding:20px; background:#fef3c7; border:2px solid #fbbf24;">
+        <h2 style="margin:0 0 12px; font-size:16px; color:#92400e; font-weight:600;">🔐 Toegangscode vereist</h2>
+        <p style="margin:0 0 16px; color:#b45309; font-size:14px;">Deze poll is beveiligd. Voer de toegangscode in om deel te nemen.</p>
+        
+        @if($errors->has('error'))
+            <div style="padding:12px; background:#fee2e2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; color:#991b1b; font-size:14px;">
+                {{ $errors->first('error') }}
+            </div>
+        @endif
+
+        <form method="post" action="{{ route('polls.verify-access-code', $poll) }}" style="display:flex; gap:8px;">
+            @csrf
+            <input type="text" name="access_code" placeholder="Voer code in..." 
+                   style="flex:1; padding:10px 12px; border:1px solid #fbbf24; border-radius:6px; font-size:14px; text-transform:uppercase;"
+                   required autofocus>
+            <button type="submit" class="btn btn-primary" style="padding:10px 20px; white-space:nowrap;">Verifiëren</button>
+        </form>
+    </div>
+@elseif($poll->isOpen())
 
     {{-- Foutmeldingen --}}
     @if($errors->any())
@@ -87,15 +135,23 @@
                     @error('email')<p class="vote-err">{{ $message }}</p>@enderror
                 </div>
             </div>
-            <div class="field" style="max-width:200px;">
-                <label for="age">Leeftijd *</label>
-                <input id="age" type="number" name="age" min="16" max="120" value="{{ old('age') }}" placeholder="bv. 28" required>
-                @error('age')<p class="vote-err">{{ $message }}</p>@enderror
+            <div class="grid grid-2">
+                <div class="field">
+                    <label for="phone">Telefoonnummer *</label>
+                    <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" placeholder="+31 6 12345678" required>
+                    @error('phone')<p class="vote-err">{{ $message }}</p>@enderror
+                </div>
+                <div class="field">
+                    <label for="age">Leeftijd *</label>
+                    <input id="age" type="number" name="age" min="16" max="120" value="{{ old('age') }}" placeholder="bv. 28" required>
+                    @error('age')<p class="vote-err">{{ $message }}</p>@enderror
+                </div>
             </div>
         </div>
 
         {{-- Vragen --}}
         @if($poll->questions && $poll->questions->count() > 0)
+
             @foreach($poll->questions as $index => $question)
             <div class="card" style="margin-bottom:16px; padding:20px;">
                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
@@ -250,5 +306,9 @@
     transform: scale(1.15);
 }
 </style>
+
+<script>
+// Additional functionality can be added here
+</script>
 
 @endsection

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicPollController::class, 'index'])->name('polls.index');
 Route::get('/polls/{poll}', [PublicPollController::class, 'show'])->name('polls.show');
+Route::post('/polls/{poll}/verify-access-code', [PublicPollController::class, 'verifyAccessCode'])->name('polls.verify-access-code');
 Route::post('/polls/{poll}/vote', [PublicPollController::class, 'vote'])->name('polls.vote');
 Route::get('/polls/confirm/{token}', [PublicPollController::class, 'confirm'])->name('polls.confirm');
 

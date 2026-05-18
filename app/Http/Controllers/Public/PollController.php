@@ -47,9 +47,19 @@ class PollController extends Controller
             ->latest()
             ->get();
 
+        // Check if poll is protected with access code and not verified yet
+        $needsAccessCode = false;
+        if ($poll->access_code) {
+            $providedCode = session("poll_access_{$poll->id}");
+            if (!$providedCode || $providedCode !== $poll->access_code) {
+                $needsAccessCode = true;
+            }
+        }
+
         return view('polls.show', [
             'poll' => $poll,
             'allPolls' => $allPolls,
+            'needsAccessCode' => $needsAccessCode,
         ]);
     }
 
@@ -63,6 +73,14 @@ class PollController extends Controller
             return back()->with('error', 'Deze poll is gesloten.');
         }
 
+        // Check access code if poll has one
+        if ($poll->access_code) {
+            $providedCode = session("poll_access_{$poll->id}");
+            if (!$providedCode || $providedCode !== $poll->access_code) {
+                return back()->with('error', 'Voer eerst de juiste toegangscode in.');
+            }
+        }
+
         $questions = $poll->questions()->get();
         if ($questions->isEmpty()) {
             return back()->with('error', 'Deze poll bevat geen vragen.');
@@ -70,6 +88,7 @@ class PollController extends Controller
 
         $respondentName = $request->string('respondent_name')->toString();
         $email          = $request->string('email')->toString();
+        $phone          = $request->string('phone')->toString();
         $age            = $request->integer('age');
         $token          = Str::uuid()->toString();
 
@@ -77,6 +96,14 @@ class PollController extends Controller
             DB::transaction(function () use ($request, $poll, $respondentName, $email, $age, $token): void {
                 $questions = $poll->questions()->get();
                 $isFirstQuestion = true;
+
+                // Clear old confirmation tokens for this email + poll (in case of re-submission)
+                Vote::query()
+                    ->where('poll_id', $poll->id)
+                    ->where('email', $email)
+                    ->whereNotNull('confirmation_token')
+                    ->where('confirmed_at', null)
+                    ->update(['confirmation_token' => null, 'confirmation_sent_at' => null]);
 
                 foreach ($questions as $question) {
                     $isOpenType = PollType::isOpenTextType((string) $question->type);
@@ -96,6 +123,8 @@ class PollController extends Controller
                     $updateData = [
                         'poll_option_id'  => $option?->id,
                         'respondent_name' => $respondentName,
+                        'email'           => $email,
+                        'phone'           => $phone,
                         'age'             => $age,
                         'numeric_value'   => $option && is_numeric($option->value) ? (int) $option->value : null,
                         'open_answer'     => $openAnswer,
@@ -186,6 +215,19 @@ class PollController extends Controller
             ]);
 
         return redirect()->route('polls.show', $poll)->with('success', 'Je stem is bevestigd en verwerkt.');
+    }
+
+    public function verifyAccessCode(Poll $poll): RedirectResponse
+    {
+        $code = strtoupper(str_replace(' ', '', request()->string('access_code')->toString()));
+
+        if ($code !== $poll->access_code) {
+            return back()->with('error', 'Ongeldige toegangscode.');
+        }
+
+        session(["poll_access_{$poll->id}" => $code]);
+
+        return redirect()->route('polls.show', $poll);
     }
 
 }

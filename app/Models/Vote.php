@@ -16,6 +16,7 @@ class Vote extends Model
         'poll_option_id',
         'respondent_name',
         'email',
+        'phone',
         'age',
         'numeric_value',
         'open_answer',

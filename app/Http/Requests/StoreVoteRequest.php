@@ -19,6 +19,7 @@ class StoreVoteRequest extends FormRequest
         $rules = [
             'respondent_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
+            'phone' => ['required', 'string', 'max:20'],
             'age' => ['required', 'integer', 'min:16', 'max:120'],
         ];
         

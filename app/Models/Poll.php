@@ -19,6 +19,7 @@ class Poll extends Model
         'opens_at',
         'closes_at',
         'is_public',
+        'access_code',
         'user_id',
     ];
 

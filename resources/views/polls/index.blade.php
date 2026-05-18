@@ -1,9 +1,74 @@
 @extends('layouts.app')
 
 @section('content')
+
+{{-- Hero Section --}}
+<div style="margin-bottom: 48px; padding: 40px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 16px; color: white;">
+    <h1 style="margin: 0 0 12px; font-size: 32px; font-weight: 700;">📊 Welkom bij Polls Elementa</h1>
+    <p style="margin: 0 0 6px; font-size: 18px; opacity: 0.95;">Jouw mening telt!</p>
+    <p style="margin: 0; opacity: 0.85; line-height: 1.6; max-width: 600px;">
+        Vul onze polls in en help ons beter te begrijpen wat jij denkt. Jouw antwoorden helpen organisaties 
+        betere beslissingen te nemen op basis van echte meningen van mensen zoals jij.
+    </p>
+</div>
+
+{{-- How it Works Section --}}
+<div style="margin-bottom: 48px;">
+    <h2 style="margin-bottom: 24px; text-align: center;">Hoe werkt het?</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
+            <div style="font-size: 32px; margin-bottom: 12px;">1️⃣</div>
+            <h3 style="margin: 0 0 8px; font-size: 16px;">Kies een poll</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 14px;">
+                Selecteer een poll die je interesseert en klik op "Invullen".
+            </p>
+        </div>
+        <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
+            <div style="font-size: 32px; margin-bottom: 12px;">2️⃣</div>
+            <h3 style="margin: 0 0 8px; font-size: 16px;">Vul je gegevens in</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 14px;">
+                Voer je naam, e-mailadres en leeftijd in. Dit wordt gebruikt voor statistieken.
+            </p>
+        </div>
+        <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
+            <div style="font-size: 32px; margin-bottom: 12px;">3️⃣</div>
+            <h3 style="margin: 0 0 8px; font-size: 16px;">Beantwoord de vragen</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 14px;">
+                Geef eerlijk antwoord op alle vragen. Jouw mening is waardevol!
+            </p>
+        </div>
+        <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
+            <div style="font-size: 32px; margin-bottom: 12px;">📧</div>
+            <h3 style="margin: 0 0 8px; font-size: 16px;">Bevestig per e-mail</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 14px;">
+                Check je mailbox en bevestig je stem. Dit zorgt ervoor dat je antwoord telt!
+            </p>
+        </div>
+        <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
+            <div style="font-size: 32px; margin-bottom: 12px;">✅</div>
+            <h3 style="margin: 0 0 8px; font-size: 16px;">Klaar!</h3>
+            <p style="margin: 0; color: var(--muted); font-size: 14px;">
+                Je stem is verwerkt. Bedankt dat je hebt deelgenomen!
+            </p>
+        </div>
+    </div>
+</div>
+
 <div style="margin-bottom: 32px;">
-    <h1 style="margin-bottom: 6px;">Polls invullen</h1>
-    <p class="meta">Vul een van deze polls in en deel jouw mening</p>
+    <h1 style="margin-bottom: 6px;">📋 Beschikbare Polls</h1>
+    <p class="meta">Vul een poll in en deel jouw mening • Jouw antwoord telt!</p>
+</div>
+
+{{-- Why Email Verification --}}
+<div style="margin-bottom: 48px; padding: 24px; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px;">
+    <h3 style="margin: 0 0 12px; color: #92400e; display: flex; align-items: center; gap: 8px;">
+        <span>🔐</span> Waarom e-mail bevestiging?
+    </h3>
+    <p style="margin: 0; color: #b45309; line-height: 1.6;">
+        We sturen je een bevestigingslink per e-mail om ervoor te zorgen dat jij echt bent wie je zegt te zijn. 
+        Dit voorkomt dat iemand anders je e-mailadres gebruikt en zorgt ervoor dat het resultaten van de poll 
+        betrouwbaar blijven. Je hebt 24 uur de tijd om je stem te bevestigen.
+    </p>
 </div>
 
 @if($polls->isEmpty())
