@@ -520,8 +520,8 @@ class PollController extends Controller
         }
 
         $respondents = Vote::where('poll_id', $poll->id)
-            ->distinct('email')
             ->get(['email', 'respondent_name'])
+            ->unique('email')
             ->map(fn($vote) => [
                 'email' => $vote->email,
                 'name' => $vote->respondent_name,
@@ -544,7 +544,7 @@ class PollController extends Controller
         $validated = request()->validate([
             'subject' => 'required|string|max:255',
             'message' => 'required|string|max:5000',
-            'recipient_type' => 'required|in:all,unconfirmed',
+            'recipient_type' => 'required|in:all,unconfirmed,specific',
             'specific_emails' => 'nullable|array',
             'specific_emails.*' => 'email',
         ]);
@@ -553,22 +553,22 @@ class PollController extends Controller
 
         if ($validated['recipient_type'] === 'all') {
             $recipients = Vote::where('poll_id', $poll->id)
-                ->distinct('email')
                 ->get(['email', 'respondent_name'])
+                ->unique('email')
                 ->keyBy('email');
         } elseif ($validated['recipient_type'] === 'unconfirmed') {
             $recipients = Vote::where('poll_id', $poll->id)
                 ->whereNull('confirmed_at')
-                ->distinct('email')
                 ->get(['email', 'respondent_name'])
+                ->unique('email')
                 ->keyBy('email');
         }
 
         if (!empty($validated['specific_emails'])) {
             $specificVotes = Vote::where('poll_id', $poll->id)
                 ->whereIn('email', $validated['specific_emails'])
-                ->distinct('email')
                 ->get(['email', 'respondent_name'])
+                ->unique('email')
                 ->keyBy('email');
             $recipients = $specificVotes;
         }
