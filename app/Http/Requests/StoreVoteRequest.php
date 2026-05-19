@@ -19,7 +19,7 @@ class StoreVoteRequest extends FormRequest
         $rules = [
             'respondent_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^(06|\+31|0031)[0-9\s\-]{8,}$/'],
+            'phone' => ['nullable', 'string', 'max:20'],
             'age' => ['nullable', 'integer', 'min:16', 'max:120'],
         ];
         
@@ -38,9 +38,7 @@ class StoreVoteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'age.min' => 'Je moet minimaal 16 jaar zijn om deze poll in te vullen.',
             'open_answer.required' => 'Vul een antwoord in bij deze open poll.',
-            'phone.regex' => 'Voer een geldig Nederlands telefoonnummer in (06, +31 of 0031).',
             '*.required' => 'Dit antwoord is verplicht.',
             '*.exists' => 'Deze optie bestaat niet.',
         ];
