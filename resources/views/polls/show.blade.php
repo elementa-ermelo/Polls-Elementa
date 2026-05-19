@@ -137,12 +137,12 @@
             </div>
             <div class="grid grid-2">
                 <div class="field">
-                    <label for="phone">Telefoonnummer *</label>
+                    <label for="phone">Telefoonnummer </label>
                     <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" placeholder="+31 6 12345678" required>
                     @error('phone')<p class="vote-err">{{ $message }}</p>@enderror
                 </div>
                 <div class="field">
-                    <label for="age">Leeftijd *</label>
+                    <label for="age">Leeftijd </label>
                     <input id="age" type="number" name="age" min="16" max="120" value="{{ old('age') }}" placeholder="bv. 28" required>
                     @error('age')<p class="vote-err">{{ $message }}</p>@enderror
                 </div>

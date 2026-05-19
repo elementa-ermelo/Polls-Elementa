@@ -93,7 +93,7 @@ class PollController extends Controller
         $token          = Str::uuid()->toString();
 
         try {
-            DB::transaction(function () use ($request, $poll, $respondentName, $email, $age, $token): void {
+            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token): void {
                 $questions = $poll->questions()->get();
                 $isFirstQuestion = true;
 
