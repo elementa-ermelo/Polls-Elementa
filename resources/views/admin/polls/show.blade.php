@@ -7,11 +7,11 @@
     <div>
         <h1 style="margin: 0 0 6px; color: var(--text);">{{ $poll->title }}</h1>
         @if($poll->question)
-            <p class="meta" style="margin: 0 0 12px;">{{ $poll->question }}</p>
+            <p class="meta" style="margin: 0 0 12px; white-space: pre-wrap; word-break: break-word;">{{ $poll->question }}</p>
         @endif
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-                {{ $poll->status === 'active' ? 'background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46;' : ($poll->status === 'archived' ? 'background: #f1f5f9; color: #64748b;' : 'background: #fef3c7; color: #92400e;') }}">
+                {{ $poll->status === 'active' ? 'background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); color: #065f46;' : ($poll->status === 'archived' ? 'background: #f1f5f9; color: #64748b;' : ($poll->status === 'inactive' ? 'background: #fee2e2; color: #991b1b;' : 'background: #fef3c7; color: #92400e;')) }}">
                 {{ ucfirst($poll->status) }}
             </span>
             <span style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;

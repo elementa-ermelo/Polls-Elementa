@@ -88,7 +88,7 @@
                     @endif
                     <form method="post" action="{{ route('admin.polls.toggle-active', $poll) }}">
                         @csrf
-                        <button class="btn" type="submit">{{ $poll->is_public ? 'Zet onactief' : 'Zet actief' }}</button>
+                        <button class="btn" type="submit">{{ $poll->is_public ? 'Zet inactief' : 'Zet actief' }}</button>
                     </form>
                     <form method="post" action="{{ route('admin.polls.archive', $poll) }}">
                         @csrf

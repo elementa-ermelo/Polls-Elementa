@@ -23,8 +23,7 @@ class PollController extends Controller
 
         $query = Poll::query()
             ->with('user')
-            ->withCount(['votes', 'confirmedVotes'])
-            ->where('status', '!=', 'archived');
+            ->withCount(['votes', 'confirmedVotes']);
 
         // Only show own polls unless admin
         if (!auth()->check() || !auth()->user()->is_admin) {
@@ -43,8 +42,8 @@ class PollController extends Controller
     {
         return view('admin.polls.form', [
             'poll' => new Poll([
-                'status' => 'active',
-                'is_public' => true,
+                'status' => 'inactive',
+                'is_public' => false,
             ]),
             'typeLabels' => PollType::labels(),
             'defaultsByType' => PollType::defaultsByType(),
@@ -60,8 +59,8 @@ class PollController extends Controller
             'title' => 'Nieuwe poll',
             'question' => '',
             'type' => 'single',
-            'status' => 'active',
-            'is_public' => true,
+            'status' => 'inactive',
+            'is_public' => false,
             'user_id' => auth()->id(),
         ]);
 
@@ -271,10 +270,10 @@ class PollController extends Controller
 
         $poll->update([
             'is_public' => $newState,
-            'status' => $newState ? 'active' : $poll->status,
+            'status' => $newState ? 'active' : 'inactive',
         ]);
 
-        return back()->with('success', $newState ? 'Poll staat nu actief.' : 'Poll staat nu onactief.');
+        return back()->with('success', $newState ? 'Poll staat nu actief.' : 'Poll staat nu inactief.');
     }
 
     public function deleteVote(Poll $poll, Vote $vote): RedirectResponse

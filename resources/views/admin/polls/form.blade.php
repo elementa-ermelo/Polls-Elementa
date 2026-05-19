@@ -30,10 +30,11 @@
         </div>
 
         <div class="field" style="max-width:280px;">
-            <label for="status">Zichtbaarheid *</label>
+            <label for="status">Status *</label>
             <select id="status" name="status" required>
-                <option value="active"   @selected(old('status', $poll->exists ? $poll->status : 'active') === 'active')>Publiek</option>
-                <option value="archived" @selected(old('status', $poll->status) === 'archived')>Archief</option>
+                <option value="inactive" @selected(old('status', $poll->exists ? $poll->status : 'inactive') === 'inactive')>🔴 In voorbereiding</option>
+                <option value="active"   @selected(old('status', $poll->status) === 'active')>🟢 Live</option>
+                <option value="archived" @selected(old('status', $poll->status) === 'archived')>🔵 Gearchiveerd</option>
             </select>
         </div>
         <input type="hidden" name="is_public" value="1">
