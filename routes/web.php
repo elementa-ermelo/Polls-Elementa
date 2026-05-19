@@ -37,6 +37,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function (): v
     Route::get('/polls/create', [AdminPollController::class, 'create'])->name('polls.create');
     Route::post('/polls', [AdminPollController::class, 'store'])->name('polls.store');
     Route::get('/polls/{poll}', [AdminPollController::class, 'show'])->name('polls.show');
+    Route::get('/polls/{poll}/send-email', [AdminPollController::class, 'sendEmailForm'])->name('polls.send-email-form');
+    Route::post('/polls/{poll}/send-email', [AdminPollController::class, 'sendEmail'])->name('polls.send-email');
     Route::get('/polls/{poll}/edit', [AdminPollController::class, 'edit'])->name('polls.edit');
     Route::put('/polls/{poll}', [AdminPollController::class, 'update'])->name('polls.update');
     Route::delete('/polls/{poll}', [AdminPollController::class, 'destroy'])->name('polls.destroy');

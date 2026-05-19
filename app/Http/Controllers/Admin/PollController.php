@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class PollController extends Controller
@@ -510,6 +511,89 @@ class PollController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function sendEmailForm(Poll $poll): View
+    {
+        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $respondents = Vote::where('poll_id', $poll->id)
+            ->distinct('email')
+            ->get(['email', 'respondent_name'])
+            ->map(fn($vote) => [
+                'email' => $vote->email,
+                'name' => $vote->respondent_name,
+            ])
+            ->sortBy('name')
+            ->values();
+
+        return view('admin.polls.send-email', [
+            'poll' => $poll,
+            'respondents' => $respondents,
+        ]);
+    }
+
+    public function sendEmail(Poll $poll): RedirectResponse
+    {
+        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $validated = request()->validate([
+            'subject' => 'required|string|max:255',
+            'message' => 'required|string|max:5000',
+            'recipient_type' => 'required|in:all,unconfirmed',
+            'specific_emails' => 'nullable|array',
+            'specific_emails.*' => 'email',
+        ]);
+
+        $recipients = [];
+
+        if ($validated['recipient_type'] === 'all') {
+            $recipients = Vote::where('poll_id', $poll->id)
+                ->distinct('email')
+                ->get(['email', 'respondent_name'])
+                ->keyBy('email');
+        } elseif ($validated['recipient_type'] === 'unconfirmed') {
+            $recipients = Vote::where('poll_id', $poll->id)
+                ->whereNull('confirmed_at')
+                ->distinct('email')
+                ->get(['email', 'respondent_name'])
+                ->keyBy('email');
+        }
+
+        if (!empty($validated['specific_emails'])) {
+            $specificVotes = Vote::where('poll_id', $poll->id)
+                ->whereIn('email', $validated['specific_emails'])
+                ->distinct('email')
+                ->get(['email', 'respondent_name'])
+                ->keyBy('email');
+            $recipients = $specificVotes;
+        }
+
+        $subject = $validated['subject'];
+        $message = $validated['message'];
+        $successCount = 0;
+
+        foreach ($recipients as $email => $vote) {
+            try {
+                Mail::raw($message, function ($m) use ($email, $vote, $subject, $poll) {
+                    $m->to($email, $vote->respondent_name)
+                      ->subject($subject);
+                });
+                $successCount++;
+            } catch (\Throwable $e) {
+                Log::error('Email verzenden mislukt', [
+                    'poll_id' => $poll->id,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return back()->with('success', "✓ Email verzonden naar {$successCount} respondenten!");
     }
 }
 
