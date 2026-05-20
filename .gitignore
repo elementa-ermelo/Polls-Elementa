@@ -30,3 +30,5 @@ Thumbs.db
 /polls-elementa.zip
 /index.php
 /bootstrap/cache/*.php
+/storage/framework/views/*.php
+/bootstrap/cache/events.php
