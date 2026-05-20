@@ -287,27 +287,31 @@ class PollController extends Controller
             abort(404);
         }
 
-        $respondentEmail = $vote->email;
-        $respondentName = $vote->respondent_name;
+        try {
+            $respondentEmail = $vote->email;
+            $respondentName = $vote->respondent_name;
 
-        // Delete ALL votes from this respondent for this poll (all answers)
-        $deletedCount = Vote::where('poll_id', $poll->id)
-            ->where('email', $respondentEmail)
-            ->delete();
+            Vote::where('poll_id', $poll->id)
+                ->where('email', $respondentEmail)
+                ->delete();
 
-        Log::info('Respondent verwijderd', [
-            'poll_id' => $poll->id,
-            'respondent_email' => $respondentEmail,
-            'respondent_name' => $respondentName,
-            'deleted_votes' => $deletedCount,
-            'deleted_by' => auth()->id(),
-        ]);
+            Log::info('Respondent verwijderd', [
+                'poll_id' => $poll->id,
+                'email' => $respondentEmail,
+                'name' => $respondentName,
+                'user_id' => auth()->id(),
+            ]);
 
-        return back()->with('success', "Respondent {$respondentName} verwijderd ({$deletedCount} antwoorden uit database).");
-    }
-        ]);
+            return back()->with('success', "✓ Respondent '$respondentName' en alle antwoorden verwijderd.");
+        } catch (\Throwable $e) {
+            Log::error('Fout bij verwijderen respondent', [
+                'poll_id' => $poll->id,
+                'vote_id' => $vote->id,
+                'error' => $e->getMessage(),
+            ]);
 
-        return back()->with('success', "Respondent {$respondentName} en alle antwoorden verwijderd.");
+            return back()->with('error', 'Fout bij verwijderen respondent: ' . $e->getMessage());
+        }
     }
 
     public function createQuestion(Poll $poll): View

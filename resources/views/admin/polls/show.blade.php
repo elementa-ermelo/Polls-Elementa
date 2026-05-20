@@ -254,9 +254,9 @@ function showTab(tab) {
                             <span style="color: #ea580c; font-weight: 700;">⏳ Wacht</span>
                         @endif
                     </div>
-                    <form method="post" action="{{ route('admin.polls.votes.destroy', [$poll, $respondent['vote_id']]) }}" onsubmit="return confirm('Respondent {{ $respondent['name'] }} en alle antwoorden verwijderen?');">
+                    <form method="post" action="{{ route('admin.polls.votes.destroy', [$poll, $respondent['vote_id']]) }}" onsubmit="return confirm('Alle stemmen van deze persoon verwijderen?');">
                         @csrf @method('DELETE')
-                        <button class="btn btn-danger" type="submit" style="font-size: 12px; padding: 6px 10px;">✕ Verwijderen</button>
+                        <button class="btn btn-danger" type="submit" style="font-size: 12px; padding: 6px 10px;">✕ Verwijder</button>
                     </form>
                 </div>
             </div>
