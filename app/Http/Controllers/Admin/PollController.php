@@ -287,9 +287,27 @@ class PollController extends Controller
             abort(404);
         }
 
-        $vote->delete();
+        $respondentEmail = $vote->email;
+        $respondentName = $vote->respondent_name;
 
-        return back()->with('success', 'Stem verwijderd.');
+        // Delete ALL votes from this respondent for this poll (all answers)
+        $deletedCount = Vote::where('poll_id', $poll->id)
+            ->where('email', $respondentEmail)
+            ->delete();
+
+        Log::info('Respondent verwijderd', [
+            'poll_id' => $poll->id,
+            'respondent_email' => $respondentEmail,
+            'respondent_name' => $respondentName,
+            'deleted_votes' => $deletedCount,
+            'deleted_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', "Respondent {$respondentName} verwijderd ({$deletedCount} antwoorden uit database).");
+    }
+        ]);
+
+        return back()->with('success', "Respondent {$respondentName} en alle antwoorden verwijderd.");
     }
 
     public function createQuestion(Poll $poll): View
