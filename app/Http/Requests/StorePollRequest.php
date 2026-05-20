@@ -18,11 +18,12 @@ class StorePollRequest extends FormRequest
             'title' => ['required', 'string', 'max:255'],
             'question' => ['nullable', 'string', 'max:1000'],
             'type' => ['nullable', 'string', Rule::in(array_keys(\App\Support\PollType::labels()))],
-            'status' => ['required', Rule::in(['active', 'archived'])],
+            'status' => ['required', Rule::in(['active', 'inactive', 'archived'])],
             'opens_at' => ['nullable', 'date'],
             'closes_at' => ['nullable', 'date', 'after_or_equal:opens_at'],
             'is_public' => ['nullable', 'boolean'],
             'questions_json' => ['nullable', 'string'],
+            'access_code' => ['nullable', 'string', 'max:50'],
         ];
     }
 
