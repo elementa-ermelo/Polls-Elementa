@@ -186,41 +186,150 @@ class PollController extends Controller
             abort(403);
         }
 
-        $poll->load([
-            'questions.options',
-            'questions.votes',
-            'options.votes',
-            'votes' => fn ($query) => $query->latest()->with(['option', 'question']),
+        try {
+            $poll->load([
+                'questions.options',
+                'questions.votes',
+                'options.votes',
+                'votes' => fn ($query) => $query->latest()->with(['option', 'question']),
+            ]);
+
+            $totalRespondents = $poll->votes()->distinct('email')->count('email');
+            $confirmedRespondents = $poll->confirmedVotes()->distinct('email')->count('email');
+
+            // Group votes by respondent
+            $respondents = Vote::where('poll_id', $poll->id)
+                ->get()
+                ->groupBy('email')
+                ->map(function ($group) {
+                    return [
+                        'respondent_name' => $group->first()->respondent_name,
+                        'email' => $group->first()->email,
+                        'age' => $group->first()->age,
+                        'created_at' => $group->first()->created_at,
+                        'confirmed_at' => $group->first()->confirmed_at,
+                        'votes' => $group,
+                    ];
+                });
+
+            $filename = 'antwoorden_' . str_replace(' ', '_', $poll->title) . '_' . now()->format('Y-m-d') . '.pdf';
+
+            // Generate simple HTML directly
+            $html = $this->generatePdfHtml($poll, $respondents, $totalRespondents, $confirmedRespondents);
+
+            $pdf = Pdf::loadHTML($html)
+                ->setPaper('a4')
+                ->setOption('defaultFont', 'Arial')
+                ->setOption('isHtml5ParserEnabled', true);
+
+            return $pdf->download($filename);
+        } catch (\Throwable $e) {
+            Log::error('Fout bij PDF downloaden', [
+                'poll_id' => $poll->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            throw $e;
+        }
+    }
+
+    private function generatePdfHtml(Poll $poll, $respondents, $totalRespondents, $confirmedRespondents): string
+    {
+        $html = <<<'HTML'
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>{POLL_TITLE}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; color: #333; }
+        h1 { color: #0066cc; border-bottom: 2px solid #0066cc; padding-bottom: 10px; }
+        .stats { margin: 20px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .stat-box { background: #f5f5f5; padding: 15px; border-left: 4px solid #0066cc; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #0066cc; }
+        .stat-label { font-size: 11px; color: #666; text-transform: uppercase; }
+        .respondent { margin: 30px 0; border: 1px solid #ddd; page-break-inside: avoid; }
+        .respondent-header { background: #0066cc; color: white; padding: 12px 15px; }
+        .respondent-info { background: #f9f9f9; padding: 12px 15px; font-size: 11px; }
+        .answers { padding: 15px; }
+        .answer { margin: 15px 0; padding: 10px; border-left: 3px solid #e0e0e0; background: #fafafa; }
+        .answer-q { font-weight: bold; color: #0066cc; margin-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h1>{POLL_TITLE}</h1>
+    <p><em>{POLL_QUESTION}</em></p>
+    
+    <div class="stats">
+        <div class="stat-box">
+            <div class="stat-value">{TOTAL_RESPONDENTS}</div>
+            <div class="stat-label">Totaal Respondenten</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{CONFIRMED_RESPONDENTS}</div>
+            <div class="stat-label">Bevestigd</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value">{QUESTION_COUNT}</div>
+            <div class="stat-label">Vragen</div>
+        </div>
+    </div>
+
+    {RESPONDENTS_HTML}
+
+    <p style="margin-top: 40px; font-size: 10px; color: #999; text-align: center; border-top: 1px solid #ddd; padding-top: 20px;">
+        Gegenereerd op {GENERATED_AT}
+    </p>
+</body>
+</html>
+HTML;
+
+        $respondentsHtml = '';
+        foreach ($respondents as $respondent) {
+            $answersHtml = '';
+            foreach ($poll->questions as $question) {
+                $vote = $respondent['votes']->firstWhere('poll_question_id', $question->id);
+                $answer = $vote 
+                    ? ($vote->option?->label ?? $vote->open_answer ?? '(Geen antwoord)')
+                    : '(Niet beantwoord)';
+                
+                $answersHtml .= sprintf(
+                    '<div class="answer"><div class="answer-q">%s</div>%s</div>',
+                    htmlspecialchars($question->question),
+                    htmlspecialchars($answer)
+                );
+            }
+
+            $status = $respondent['confirmed_at'] ? '✓ Bevestigd' : '⏳ In afwachting';
+            $respondentsHtml .= sprintf(
+                '<div class="respondent">
+                    <div class="respondent-header">%s <span style="float:right;">%s</span></div>
+                    <div class="respondent-info">
+                        <strong>Email:</strong> %s<br>
+                        <strong>Leeftijd:</strong> %s<br>
+                        <strong>Datum:</strong> %s
+                    </div>
+                    <div class="answers">%s</div>
+                </div>',
+                htmlspecialchars($respondent['respondent_name']),
+                $status,
+                htmlspecialchars($respondent['email']),
+                htmlspecialchars((string)($respondent['age'] ?? '-')),
+                $respondent['created_at']->format('d-m-Y H:i'),
+                $answersHtml
+            );
+        }
+
+        return strtr($html, [
+            '{POLL_TITLE}' => htmlspecialchars($poll->title),
+            '{POLL_QUESTION}' => htmlspecialchars($poll->question ?? ''),
+            '{TOTAL_RESPONDENTS}' => $totalRespondents,
+            '{CONFIRMED_RESPONDENTS}' => $confirmedRespondents,
+            '{QUESTION_COUNT}' => $poll->questions->count(),
+            '{RESPONDENTS_HTML}' => $respondentsHtml,
+            '{GENERATED_AT}' => now()->format('d-m-Y H:i'),
         ]);
-
-        $totalRespondents = $poll->votes()->distinct('email')->count('email');
-        $confirmedRespondents = $poll->confirmedVotes()->distinct('email')->count('email');
-
-        // Group votes by respondent
-        $respondents = Vote::where('poll_id', $poll->id)
-            ->get()
-            ->groupBy('email')
-            ->map(function ($group) {
-                return [
-                    'respondent_name' => $group->first()->respondent_name,
-                    'email' => $group->first()->email,
-                    'age' => $group->first()->age,
-                    'created_at' => $group->first()->created_at,
-                    'confirmed_at' => $group->first()->confirmed_at,
-                    'votes' => $group,
-                ];
-            });
-
-        $filename = 'antwoorden_' . str_replace(' ', '_', $poll->title) . '_' . now()->format('Y-m-d') . '.pdf';
-
-        $pdf = Pdf::loadView('admin.polls.download-pdf', [
-            'poll' => $poll,
-            'respondents' => $respondents,
-            'totalRespondents' => $totalRespondents,
-            'confirmedRespondents' => $confirmedRespondents,
-        ]);
-
-        return $pdf->download($filename);
     }
 
     public function edit(Poll $poll): View
