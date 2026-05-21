@@ -35,6 +35,8 @@
             <button class="btn" disabled style="opacity: 0.5; cursor: not-allowed; font-size: 13px;" title="Actieve polls kunnen niet bewerkt worden">✏️ Bewerk</button>
         @endif
         <a class="btn" href="{{ route('admin.polls.send-email-form', $poll) }}" style="font-size: 13px;">📧 Email</a>
+        <a class="btn" href="{{ route('admin.polls.download-pdf', $poll) }}" style="font-size: 13px;">📄 PDF</a>
+        <a class="btn" href="{{ route('admin.polls.export-csv', $poll) }}" style="font-size: 13px;">📊 CSV</a>
         <form method="post" action="{{ route('admin.polls.toggle-active', $poll) }}" style="display:inline;">
             @csrf
             <button type="submit" class="btn" style="font-size:13px;">

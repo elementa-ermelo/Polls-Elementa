@@ -8,8 +8,10 @@ use App\Models\Poll;
 use App\Models\PollQuestion;
 use App\Models\Vote;
 use App\Support\PollType;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -176,6 +178,49 @@ class PollController extends Controller
             'totalRespondents' => $totalRespondents,
             'confirmedRespondents' => $confirmedRespondents,
         ]);
+    }
+
+    public function downloadPdf(Poll $poll): Response
+    {
+        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $poll->load([
+            'questions.options',
+            'questions.votes',
+            'options.votes',
+            'votes' => fn ($query) => $query->latest()->with(['option', 'question']),
+        ]);
+
+        $totalRespondents = $poll->votes()->distinct('email')->count('email');
+        $confirmedRespondents = $poll->confirmedVotes()->distinct('email')->count('email');
+
+        // Group votes by respondent
+        $respondents = Vote::where('poll_id', $poll->id)
+            ->get()
+            ->groupBy('email')
+            ->map(function ($group) {
+                return [
+                    'respondent_name' => $group->first()->respondent_name,
+                    'email' => $group->first()->email,
+                    'age' => $group->first()->age,
+                    'created_at' => $group->first()->created_at,
+                    'confirmed_at' => $group->first()->confirmed_at,
+                    'votes' => $group,
+                ];
+            });
+
+        $filename = 'antwoorden_' . str_replace(' ', '_', $poll->title) . '_' . now()->format('Y-m-d') . '.pdf';
+
+        $pdf = Pdf::loadView('admin.polls.download-pdf', [
+            'poll' => $poll,
+            'respondents' => $respondents,
+            'totalRespondents' => $totalRespondents,
+            'confirmedRespondents' => $confirmedRespondents,
+        ]);
+
+        return $pdf->download($filename);
     }
 
     public function edit(Poll $poll): View

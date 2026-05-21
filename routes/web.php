@@ -44,6 +44,8 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function (): v
     Route::delete('/polls/{poll}', [AdminPollController::class, 'destroy'])->name('polls.destroy');
     Route::post('/polls/{poll}/toggle-active', [AdminPollController::class, 'toggleActive'])->name('polls.toggle-active');
     Route::post('/polls/{poll}/archive', [AdminPollController::class, 'archive'])->name('polls.archive');
+    Route::get('/polls/{poll}/download-pdf', [AdminPollController::class, 'downloadPdf'])->name('polls.download-pdf');
+    Route::get('/polls/{poll}/export-csv', [AdminPollController::class, 'exportCsv'])->name('polls.export-csv');
     Route::delete('/polls/{poll}/votes/{vote}', [AdminPollController::class, 'deleteVote'])->name('polls.votes.destroy');
     
     // Poll Questions
