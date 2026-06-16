@@ -61,7 +61,7 @@ class PollController extends Controller
         $poll = Poll::create([
             'title' => 'Nieuwe poll',
             'question' => '',
-            'type' => 'single',
+            'type' => 'closed',
             'status' => 'inactive',
             'is_public' => false,
             'user_id' => auth()->id(),
