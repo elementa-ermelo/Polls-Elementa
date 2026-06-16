@@ -280,84 +280,85 @@ function showTab(tab) {
 </div>
 
 <script>
-// Drag-and-drop voor vragen
-let draggedElement = null;
+// Drag-and-drop voor vragen - wacht tot pagina volledig geladen is
+document.addEventListener('DOMContentLoaded', () => {
+    let draggedElement = null;
 
-const questionItems = document.querySelectorAll('.question-item');
+    const questionItems = document.querySelectorAll('.question-item');
 
-questionItems.forEach(item => {
-    item.addEventListener('dragstart', (e) => {
-        draggedElement = item;
-        item.style.opacity = '0.5';
-        item.style.borderStyle = 'solid';
-        e.dataTransfer.effectAllowed = 'move';
-    });
+    questionItems.forEach(item => {
+        item.addEventListener('dragstart', (e) => {
+            draggedElement = item;
+            item.style.opacity = '0.5';
+            item.style.borderStyle = 'solid';
+            e.dataTransfer.effectAllowed = 'move';
+        });
 
-    item.addEventListener('dragend', (e) => {
-        item.style.opacity = '1';
-        item.style.borderStyle = 'dashed';
-        draggedElement = null;
-    });
+        item.addEventListener('dragend', (e) => {
+            item.style.opacity = '1';
+            item.style.borderStyle = 'dashed';
+            draggedElement = null;
+        });
 
-    item.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        
-        if (item !== draggedElement) {
-            item.style.borderTop = '3px solid var(--primary)';
-            item.style.borderBottomWidth = '1px';
-        }
-    });
-
-    item.addEventListener('dragleave', (e) => {
-        item.style.borderTop = '1.5px dashed var(--line)';
-    });
-
-    item.addEventListener('drop', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (item !== draggedElement) {
-            const list = document.getElementById('questions-list');
-            const allItems = [...list.querySelectorAll('.question-item')];
-            const draggedIndex = allItems.indexOf(draggedElement);
-            const targetIndex = allItems.indexOf(item);
-
-            if (draggedIndex < targetIndex) {
-                item.insertAdjacentElement('afterend', draggedElement);
-            } else {
-                item.insertAdjacentElement('beforebegin', draggedElement);
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (item !== draggedElement) {
+                item.style.borderTop = '3px solid var(--primary)';
             }
+        });
 
-            item.style.borderTop = '1.5px dashed var(--line)';
-            saveOrder();
-        }
+        item.addEventListener('dragleave', (e) => {
+            item.style.borderTop = '';
+        });
+
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (item !== draggedElement) {
+                const list = document.getElementById('questions-list');
+                const allItems = [...list.querySelectorAll('.question-item')];
+                const draggedIndex = allItems.indexOf(draggedElement);
+                const targetIndex = allItems.indexOf(item);
+
+                if (draggedIndex < targetIndex) {
+                    item.insertAdjacentElement('afterend', draggedElement);
+                } else {
+                    item.insertAdjacentElement('beforebegin', draggedElement);
+                }
+
+                item.style.borderTop = '';
+                saveOrder();
+            }
+        });
     });
+
+    function saveOrder() {
+        const list = document.getElementById('questions-list');
+        const order = [];
+        list.querySelectorAll('.question-item').forEach((item, index) => {
+            order.push(item.getAttribute('data-question-id'));
+        });
+
+        fetch('{{ route("admin.polls.questions.reorder", $poll) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ order: order })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (!data.success) {
+                console.error('Fout bij opslaan volgorde:', data.error);
+            }
+        })
+        .catch(err => console.error('Fout:', err));
+    }
 });
-
-function saveOrder() {
-    const list = document.getElementById('questions-list');
-    const order = [];
-    list.querySelectorAll('.question-item').forEach((item, index) => {
-        order.push(item.getAttribute('data-question-id'));
-    });
-
-    fetch('{{ route("admin.polls.questions.reorder", $poll) }}', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-        },
-        body: JSON.stringify({ order: order })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (!data.success) {
-            console.error('Fout bij opslaan volgorde:', data.error);
-        }
-    })
-    .catch(err => console.error('Fout:', err));
-}
 </script>
 
 @endsection
