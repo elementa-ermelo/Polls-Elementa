@@ -771,5 +771,37 @@ HTML;
 
         return back()->with('success', "✓ Email verzonden naar {$successCount} respondenten!");
     }
+
+    public function reorderQuestions(Poll $poll): JsonResponse
+    {
+        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $order = request()->input('order', []);
+
+        if (!is_array($order)) {
+            return response()->json(['error' => 'Ongeldige volgorde'], 400);
+        }
+
+        try {
+            DB::transaction(function () use ($poll, $order) {
+                foreach ($order as $position => $questionId) {
+                    PollQuestion::query()
+                        ->where('id', $questionId)
+                        ->where('poll_id', $poll->id)
+                        ->update(['position' => $position]);
+                }
+            });
+
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            Log::error('Volgorde bijwerken mislukt', [
+                'poll_id' => $poll->id,
+                'error' => $e->getMessage(),
+            ]);
+            return response()->json(['error' => 'Fout bij bijwerken volgorde'], 500);
+        }
+    }
 }
 

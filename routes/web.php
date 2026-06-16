@@ -54,6 +54,7 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function (): v
     Route::get('/polls/{poll}/questions/{question}/edit', [AdminPollController::class, 'editQuestion'])->name('polls.questions.edit');
     Route::put('/polls/{poll}/questions/{question}', [AdminPollController::class, 'updateQuestion'])->name('polls.questions.update');
     Route::delete('/polls/{poll}/questions/{question}', [AdminPollController::class, 'destroyQuestion'])->name('polls.questions.destroy');
+    Route::post('/polls/{poll}/questions/reorder', [AdminPollController::class, 'reorderQuestions'])->name('polls.questions.reorder');
 
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/reports/archive', [ReportController::class, 'archive'])->name('reports.archive');

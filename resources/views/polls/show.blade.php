@@ -308,7 +308,13 @@
 </style>
 
 <script>
-// Additional functionality can be added here
+// Scroll to top when page loads if there's a success or error message
+document.addEventListener('DOMContentLoaded', () => {
+    const flashElement = document.querySelector('.flash');
+    if (flashElement) {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+});
 </script>
 
 @endsection

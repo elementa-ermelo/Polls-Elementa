@@ -96,25 +96,34 @@ function showTab(tab) {
         <a class="btn btn-primary" href="{{ route('admin.polls.questions.create', $poll) }}" style="font-size:13px;">+ Vraag toevoegen</a>
     </div>
 
-    @forelse($poll->questions as $question)
-        <div style="padding:14px; border:1px solid var(--line); border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px;">
-            <div style="flex:1; min-width:0;">
-                <p style="margin:0 0 4px; font-weight:600; font-size:15px;">{{ $question->question }}</p>
-                <p class="meta" style="margin:0; font-size:13px;">
-                    {{ $question->type }} &bull; {{ $question->options->count() }} opties &bull; {{ $question->votes->whereNotNull('confirmed_at')->count() }} bevestigde stemmen
-                </p>
+    <div id="questions-list" style="display:flex; flex-direction:column; gap:10px;">
+        @forelse($poll->questions->sortBy('position') as $question)
+            <div class="question-item" draggable="true" data-question-id="{{ $question->id }}" style="padding:14px; border:1.5px dashed var(--line); border-radius:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; background:var(--surface); cursor:grab; transition:all .2s;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
+                    <span style="color:var(--muted); cursor:grab; font-size:20px; flex-shrink:0;">⋮</span>
+                    <div style="flex:1; min-width:0;">
+                        <p style="margin:0 0 4px; font-weight:600; font-size:15px;">{{ $question->question }}</p>
+                        <p class="meta" style="margin:0; font-size:13px;">
+                            {{ $question->type }} &bull; {{ $question->options->count() }} opties &bull; {{ $question->votes->whereNotNull('confirmed_at')->count() }} bevestigde stemmen
+                        </p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <a class="btn" href="{{ route('admin.polls.questions.edit', [$poll, $question]) }}" style="font-size:13px; padding:6px 12px;">Bewerk</a>
+                    <form method="post" action="{{ route('admin.polls.questions.destroy', [$poll, $question]) }}" onsubmit="return confirm('Vraag verwijderen?');">
+                        @csrf @method('DELETE')
+                        <button class="btn btn-danger" type="submit" style="font-size:13px; padding:6px 12px;">Verwijder</button>
+                    </form>
+                </div>
             </div>
-            <div style="display:flex; gap:6px; flex-shrink:0;">
-                <a class="btn" href="{{ route('admin.polls.questions.edit', [$poll, $question]) }}" style="font-size:13px; padding:6px 12px;">Bewerk</a>
-                <form method="post" action="{{ route('admin.polls.questions.destroy', [$poll, $question]) }}" onsubmit="return confirm('Vraag verwijderen?');">
-                    @csrf @method('DELETE')
-                    <button class="btn btn-danger" type="submit" style="font-size:13px; padding:6px 12px;">Verwijder</button>
-                </form>
-            </div>
-        </div>
-    @empty
-        <p class="meta" style="text-align:center; padding:20px 0;">Nog geen vragen. <a href="{{ route('admin.polls.questions.create', $poll) }}" style="color:var(--accent);">Eerste vraag toevoegen →</a></p>
-    @endforelse
+        @empty
+            <p class="meta" style="text-align:center; padding:20px 0;">Nog geen vragen. <a href="{{ route('admin.polls.questions.create', $poll) }}" style="color:var(--accent);">Eerste vraag toevoegen →</a></p>
+        @endforelse
+    </div>
+
+    <p class="meta" style="text-align:center; margin-top:12px; font-size:12px; color:var(--muted); display:{{ $poll->questions->count() > 0 ? 'block' : 'none' }};">
+        💡 Je kunt vragen slepen om de volgorde te wijzigen
+    </p>
 </div>
 
 </div>
@@ -269,5 +278,86 @@ function showTab(tab) {
 @endif
 </div>
 </div>
+
+<script>
+// Drag-and-drop voor vragen
+let draggedElement = null;
+
+const questionItems = document.querySelectorAll('.question-item');
+
+questionItems.forEach(item => {
+    item.addEventListener('dragstart', (e) => {
+        draggedElement = item;
+        item.style.opacity = '0.5';
+        item.style.borderStyle = 'solid';
+        e.dataTransfer.effectAllowed = 'move';
+    });
+
+    item.addEventListener('dragend', (e) => {
+        item.style.opacity = '1';
+        item.style.borderStyle = 'dashed';
+        draggedElement = null;
+    });
+
+    item.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        if (item !== draggedElement) {
+            item.style.borderTop = '3px solid var(--primary)';
+            item.style.borderBottomWidth = '1px';
+        }
+    });
+
+    item.addEventListener('dragleave', (e) => {
+        item.style.borderTop = '1.5px dashed var(--line)';
+    });
+
+    item.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (item !== draggedElement) {
+            const list = document.getElementById('questions-list');
+            const allItems = [...list.querySelectorAll('.question-item')];
+            const draggedIndex = allItems.indexOf(draggedElement);
+            const targetIndex = allItems.indexOf(item);
+
+            if (draggedIndex < targetIndex) {
+                item.insertAdjacentElement('afterend', draggedElement);
+            } else {
+                item.insertAdjacentElement('beforebegin', draggedElement);
+            }
+
+            item.style.borderTop = '1.5px dashed var(--line)';
+            saveOrder();
+        }
+    });
+});
+
+function saveOrder() {
+    const list = document.getElementById('questions-list');
+    const order = [];
+    list.querySelectorAll('.question-item').forEach((item, index) => {
+        order.push(item.getAttribute('data-question-id'));
+    });
+
+    fetch('{{ route("admin.polls.questions.reorder", $poll) }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({ order: order })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (!data.success) {
+            console.error('Fout bij opslaan volgorde:', data.error);
+        }
+    })
+    .catch(err => console.error('Fout:', err));
+}
+</script>
 
 @endsection
