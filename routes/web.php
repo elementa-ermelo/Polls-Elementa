@@ -60,3 +60,14 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function (): v
     Route::get('/reports/archive', [ReportController::class, 'archive'])->name('reports.archive');
     Route::post('/reports/{poll}/reactivate', [ReportController::class, 'reactivate'])->name('reports.reactivate');
 });
+
+// Serve storage files directly without symlink (workaround for Windows)
+Route::get('/storage/{path}', function ($path) {
+    $fullPath = storage_path('app/public/' . $path);
+    
+    if (!file_exists($fullPath)) {
+        abort(404);
+    }
+    
+    return response()->file($fullPath);
+})->where('path', '.*');
