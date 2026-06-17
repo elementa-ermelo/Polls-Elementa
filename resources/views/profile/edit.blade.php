@@ -61,7 +61,13 @@
 
                 <div class="mb-6">
                     <label for="logo" class="block text-gray-700 font-bold mb-2">Logo</label>
-                    <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+                    <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" onchange="previewLogo(event)">
+                    <p class="text-gray-600 text-sm mt-2">JPG, PNG of GIF. Maximaal 2MB.</p>
+                    <div id="logoPreview" style="margin-top: 12px; display: none;">
+                        <p class="text-gray-600 text-sm mb-2">Preview:</p>
+                        <img id="previewImage" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;">
+                    </div>
+                    <p id="uploadedFileName" class="text-sm text-gray-500 mt-2"></p>
                 </div>
 
                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
@@ -96,4 +102,19 @@
         </div>
     </div>
 </div>
+
+<script>
+function previewLogo(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImage').src = e.target.result;
+            document.getElementById('logoPreview').style.display = 'block';
+            document.getElementById('uploadedFileName').textContent = 'Bestand: ' + file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+</script>
 @endsection

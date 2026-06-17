@@ -36,8 +36,22 @@
         </div>
 
         <div class="mb-6">
-            <label for="logo" class="block text-gray-700 font-bold mb-2">Logo</label>
-            <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+            <label class="block text-gray-700 font-bold mb-2">Logo</label>
+            @if($user->logo)
+                <div class="mb-3">
+                    <p class="text-gray-600 text-sm mb-2">Huidigie logo:</p>
+                    <img src="{{ asset('storage/' . $user->logo) }}" alt="{{ $user->name }}" style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover; border: 2px solid #e5e7eb;">
+                    <p class="text-gray-600 text-sm mt-2">{{ $user->logo }}</p>
+                </div>
+            @endif
+            <label for="logo" class="block text-gray-700 font-bold mb-2">{{ $user->logo ? 'Nieuw logo' : 'Logo' }}</label>
+            <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" onchange="previewLogo(event)">
+            <p class="text-gray-600 text-sm mt-2">JPG, PNG of GIF. Maximaal 2MB.</p>
+            <div id="logoPreview" style="margin-top: 12px; display: none;">
+                <p class="text-gray-600 text-sm mb-2">Preview:</p>
+                <img id="previewImage" style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover; border: 2px solid #e5e7eb;">
+            </div>
+            <p id="uploadedFileName" class="text-sm text-gray-500 mt-2"></p>
         </div>
 
         <div class="flex justify-between">
@@ -50,4 +64,19 @@
         </div>
     </form>
 </div>
+
+<script>
+function previewLogo(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImage').src = e.target.result;
+            document.getElementById('logoPreview').style.display = 'block';
+            document.getElementById('uploadedFileName').textContent = 'Bestand: ' + file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+</script>
 @endsection

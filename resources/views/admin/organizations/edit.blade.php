@@ -49,10 +49,16 @@
                 <div class="mb-3">
                     <p class="text-gray-600 text-sm mb-2">Huidige logo:</p>
                     <img src="{{ asset('storage/' . $organization->logo) }}" alt="{{ $organization->name }}" class="h-40 w-40 object-cover rounded">
+                    <p class="text-gray-600 text-sm mt-2">{{ $organization->logo }}</p>
                 </div>
             @endif
-            <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+            <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500" onchange="previewLogo(event)">
             <p class="text-gray-600 text-sm mt-2">JPG, PNG of GIF. Maximaal 2MB. (Leeg laten om huidig logo te behouden)</p>
+            <div id="logoPreview" style="margin-top: 12px; display: none;">
+                <p class="text-gray-600 text-sm mb-2">Preview:</p>
+                <img id="previewImage" style="width: 150px; height: 150px; object-fit: cover; border-radius: 8px; border: 2px solid #e5e7eb;">
+            </div>
+            <p id="uploadedFileName" class="text-sm text-gray-500 mt-2"></p>
         </div>
 
         <div class="flex justify-between">
@@ -65,4 +71,19 @@
         </div>
     </form>
 </div>
+
+<script>
+function previewLogo(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('previewImage').src = e.target.result;
+            document.getElementById('logoPreview').style.display = 'block';
+            document.getElementById('uploadedFileName').textContent = 'Bestand: ' + file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+</script>
 @endsection
