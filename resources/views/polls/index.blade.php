@@ -82,19 +82,22 @@
         @foreach($polls as $poll)
             <div class="card" style="padding: 24px; border-left: 5px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px;">
-                    <div style="flex: 1;">
+                    <div>
                         <h3 style="margin-top: 0; margin-bottom: 8px; color: var(--primary);">{{ $poll->title }}</h3>
                         <p style="margin: 0 0 12px 0; color: var(--text-light); font-size: 15px;">{{ $poll->question }}</p>
                         @if($poll->user)
-                            <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 12px; background: rgba(59, 130, 246, 0.05); border-radius: 8px;">
                                 @if($poll->user->logo)
-                                    <img src="{{ asset('storage/' . $poll->user->logo) }}" alt="{{ $poll->user->name }}" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--line);">
+                                    <img src="{{ asset('storage/' . $poll->user->logo) }}" alt="{{ $poll->user->name }}" style="width: 64px; height: 64px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary); flex-shrink: 0;">
                                 @else
-                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #dbeafe 0%, #cffafe 100%); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--primary);">
+                                    <div style="width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, #dbeafe 0%, #cffafe 100%); display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 700; color: var(--primary); flex-shrink: 0; border: 2px solid var(--primary);">
                                         {{ substr($poll->user->name, 0, 1) }}
                                     </div>
                                 @endif
-                                <span style="font-size: 13px; color: var(--muted);"><strong style="color: var(--text);">{{ $poll->user->name }}</strong></span>
+                                <div>
+                                    <p style="margin: 0; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;">Van</p>
+                                    <p style="margin: 0; font-weight: 700; font-size: 14px; color: var(--text);">{{ $poll->user->name }}</p>
+                                </div>
                             </div>
                         @endif
                     </div>

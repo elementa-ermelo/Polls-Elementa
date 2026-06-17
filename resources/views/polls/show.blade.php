@@ -52,26 +52,29 @@
 
 {{-- Poll header --}}
 <div class="card" style="margin-bottom:16px; padding:24px;">
-    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap;">
-        <div>
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:24px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
             <h1 style="margin:0 0 6px; font-size:24px;">{{ $poll->title }}</h1>
             @if($poll->question)
                 <p style="margin:0; color:var(--muted); font-size:15px;">{{ $poll->question }}</p>
             @endif
         </div>
         @if($poll->user)
-            <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:16px; flex-shrink:0; padding:12px; background:rgba(59, 130, 246, 0.05); border-radius:12px; min-width:240px;">
                 @if($poll->user->logo)
                     <img src="{{ asset('storage/' . $poll->user->logo) }}" alt="{{ $poll->user->name }}"
-                         style="height:44px; width:44px; border-radius:50%; object-fit:cover; border:2px solid var(--line);">
+                         style="height:100px; width:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary); box-shadow:0 4px 12px rgba(59, 130, 246, 0.2);">
                 @else
-                    <div style="height:44px; width:44px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center;">
-                        <span style="font-size:17px; color:var(--accent); font-weight:700;">{{ substr($poll->user->name,0,1) }}</span>
+                    <div style="height:100px; width:100px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; border:3px solid var(--primary); box-shadow:0 4px 12px rgba(59, 130, 246, 0.2);">
+                        <span style="font-size:44px; color:var(--accent); font-weight:700;">{{ substr($poll->user->name,0,1) }}</span>
                     </div>
                 @endif
                 <div>
-                    <p style="margin:0; font-size:11px; color:var(--muted);">Aangemaakt door</p>
-                    <p style="margin:0; font-weight:600; font-size:14px;">{{ $poll->user->name }}</p>
+                    <p style="margin:0 0 4px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Organisatie</p>
+                    <p style="margin:0; font-weight:700; font-size:16px; color:var(--primary);">{{ $poll->user->name }}</p>
+                    @if($poll->user->email)
+                        <p style="margin:4px 0 0; font-size:12px; color:var(--muted);">{{ $poll->user->email }}</p>
+                    @endif
                 </div>
             </div>
         @endif

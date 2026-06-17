@@ -47,9 +47,14 @@ class UserController extends Controller
         $validated['is_admin'] = $request->boolean('is_admin');
         $validated['organization_id'] = auth()->user()->organization_id;
 
-        if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('logos', 'public');
-            $validated['logo'] = $logoPath;
+        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
+            $file = $request->file('logo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $logoPath = $file->storeAs('logos', $filename, 'public');
+            
+            if ($logoPath) {
+                $validated['logo'] = $logoPath;
+            }
         }
 
         User::create($validated);
@@ -80,12 +85,20 @@ class UserController extends Controller
 
         $validated['is_admin'] = $request->boolean('is_admin');
 
-        if ($request->hasFile('logo')) {
-            if ($user->logo) {
+        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
+            // Delete old logo if it exists
+            if ($user->logo && Storage::disk('public')->exists($user->logo)) {
                 Storage::disk('public')->delete($user->logo);
             }
-            $logoPath = $request->file('logo')->store('logos', 'public');
-            $validated['logo'] = $logoPath;
+            
+            // Store new logo
+            $file = $request->file('logo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $logoPath = $file->storeAs('logos', $filename, 'public');
+            
+            if ($logoPath) {
+                $validated['logo'] = $logoPath;
+            }
         }
 
         $user->update($validated);

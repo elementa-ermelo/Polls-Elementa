@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -34,9 +35,14 @@ class OrganizationController extends Controller
 
         $validated['slug'] = Str::slug($validated['name']);
 
-        if ($request->hasFile('logo')) {
-            $logoPath = $request->file('logo')->store('logos', 'public');
-            $validated['logo'] = $logoPath;
+        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
+            $file = $request->file('logo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $logoPath = $file->storeAs('logos', $filename, 'public');
+            
+            if ($logoPath) {
+                $validated['logo'] = $logoPath;
+            }
         }
 
         Organization::create($validated);
@@ -68,12 +74,20 @@ class OrganizationController extends Controller
 
         $validated['slug'] = Str::slug($validated['name']);
 
-        if ($request->hasFile('logo')) {
-            if ($organization->logo) {
-                \Storage::disk('public')->delete($organization->logo);
+        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
+            // Delete old logo if it exists
+            if ($organization->logo && Storage::disk('public')->exists($organization->logo)) {
+                Storage::disk('public')->delete($organization->logo);
             }
-            $logoPath = $request->file('logo')->store('logos', 'public');
-            $validated['logo'] = $logoPath;
+            
+            // Store new logo
+            $file = $request->file('logo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $logoPath = $file->storeAs('logos', $filename, 'public');
+            
+            if ($logoPath) {
+                $validated['logo'] = $logoPath;
+            }
         }
 
         $organization->update($validated);
@@ -83,8 +97,8 @@ class OrganizationController extends Controller
 
     public function destroy(Organization $organization)
     {
-        if ($organization->logo) {
-            \Storage::disk('public')->delete($organization->logo);
+        if ($organization->logo && Storage::disk('public')->exists($organization->logo)) {
+            Storage::disk('public')->delete($organization->logo);
         }
         $organization->delete();
 

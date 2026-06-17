@@ -26,12 +26,22 @@ class ProfileController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
         ]);
 
-        if ($request->hasFile('logo')) {
-            if (auth()->user()->logo) {
+        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
+            // Delete old logo if it exists
+            if (auth()->user()->logo && Storage::disk('public')->exists(auth()->user()->logo)) {
                 Storage::disk('public')->delete(auth()->user()->logo);
             }
-            $logoPath = $request->file('logo')->store('logos', 'public');
-            $validated['logo'] = $logoPath;
+            
+            // Store new logo
+            $file = $request->file('logo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $logoPath = $file->storeAs('logos', $filename, 'public');
+            
+            if ($logoPath) {
+                $validated['logo'] = $logoPath;
+            } else {
+                return back()->withInput()->with('error', 'Logo kon niet worden opgeslagen.');
+            }
         }
 
         auth()->user()->update($validated);
