@@ -20,12 +20,6 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        dd([
-            'has_file' => $request->hasFile('logo'),
-            'files' => $request->allFiles(),
-            'all' => $request->all(),
-        ]);
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . auth()->user()->id,
@@ -33,24 +27,27 @@ class ProfileController extends Controller
         ]);
 
         if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
-            // Delete old logo if it exists
             if (auth()->user()->logo && Storage::disk('public')->exists(auth()->user()->logo)) {
                 Storage::disk('public')->delete(auth()->user()->logo);
             }
             
-            // Store new logo
             $file = $request->file('logo');
             $filename = time() . '_' . $file->getClientOriginalName();
             $logoPath = $file->storeAs('logos', $filename, 'public');
+
+            \Log::info('Logo debug', [
+                'logoPath' => $logoPath,
+                'validated_logo' => $validated['logo'] ?? 'NOT SET',
+            ]);
             
             if ($logoPath) {
                 $validated['logo'] = $logoPath;
-            } else {
-                return back()->withInput()->with('error', 'Logo kon niet worden opgeslagen.');
             }
         }
 
+        \Log::info('Before update', ['validated' => $validated]);
         auth()->user()->update($validated);
+        \Log::info('After update', ['user_logo' => auth()->user()->fresh()->logo]);
 
         return back()->with('success', 'Profiel bijgewerkt.');
     }
