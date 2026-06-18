@@ -19,7 +19,8 @@
                     <img src="{{ asset('storage/' . $user->logo) }}" alt="{{ $user->name }}" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #e5e7eb;">
                 @else
                     <div style="width: 120px; height: 120px; border-radius: 50%; background: #d1d5db; display: flex; align-items: center; justify-content: center; border: 3px solid #e5e7eb;">
-                        <span style="font-size: 48px; color: #6b7280; font-weight: bold;">{{ substr($user->name, 0, 1) }}</span>
+                        <span sphp artisan migrate:status
+                        tyle="font-size: 48px; color: #6b7280; font-weight: bold;">{{ substr($user->name, 0, 1) }}</span>
                     </div>
                 @endif
             </div>

@@ -20,6 +20,12 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
+        dd([
+            'has_file' => $request->hasFile('logo'),
+            'files' => $request->allFiles(),
+            'all' => $request->all(),
+        ]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . auth()->user()->id,
