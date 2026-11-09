@@ -33,11 +33,13 @@
                         @csrf
                         <button type="submit" class="btn" style="font-size:13px; padding:6px 12px;">Activeren</button>
                     </form>
+                    @if($poll->isOwnedBy(auth()->user()))
                     <form method="POST" action="{{ route('admin.polls.destroy', $poll) }}" style="display:inline;" onsubmit="return confirm('Poll definitief verwijderen?');">
                         @csrf
                         @method('DELETE')
                         <button type="submit" class="btn" style="font-size:13px; padding:6px 12px; color:#b91c1c;">Verwijderen</button>
                     </form>
+                    @endif
                 </td>
             </tr>
         @empty

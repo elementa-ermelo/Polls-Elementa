@@ -20,9 +20,7 @@ class ReportController extends Controller
             ->with('options')
             ->where('status', '!=', 'archived');
 
-        if (!auth()->user()->is_admin) {
-            $pollsQuery->where('user_id', auth()->id());
-        }
+        $pollsQuery->visibleTo(auth()->user());
 
         $polls = $pollsQuery->latest()->get();
 
@@ -34,9 +32,7 @@ class ReportController extends Controller
 
         $allPollsQuery = Poll::query();
 
-        if (!auth()->user()->is_admin) {
-            $allPollsQuery->where('user_id', auth()->id());
-        }
+        $allPollsQuery->visibleTo(auth()->user());
 
         $allPolls = $allPollsQuery->get();
 
@@ -71,9 +67,7 @@ class ReportController extends Controller
             ])
             ->where('status', 'archived');
 
-        if (!auth()->user()->is_admin) {
-            $archivedQuery->where('user_id', auth()->id());
-        }
+        $archivedQuery->visibleTo(auth()->user());
 
         $archivedPolls = $archivedQuery->latest()->get();
 
@@ -84,7 +78,7 @@ class ReportController extends Controller
 
     public function reactivate(Poll $poll): \Illuminate\Http\RedirectResponse
     {
-        abort_unless(auth()->user()->is_admin || $poll->user_id === auth()->id(), 403);
+        abort_unless($poll->isManagedBy(auth()->user()), 403);
 
         $poll->update([
             'status' => 'active',

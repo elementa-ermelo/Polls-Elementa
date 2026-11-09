@@ -81,6 +81,7 @@
                     @if($poll->status !== 'archived')
                         <a class="btn" href="{{ route('admin.polls.show', $poll) }}">Bekijk</a>
                     @endif
+                    @if($poll->isManagedBy(auth()->user()))
                     @if(!$poll->is_public)
                         <a class="btn" href="{{ route('admin.polls.edit', $poll) }}">Bewerk</a>
                     @else
@@ -94,11 +95,14 @@
                         @csrf
                         <button class="btn" type="submit">Archiveer</button>
                     </form>
+                    @if($poll->isOwnedBy(auth()->user()))
                     <form method="post" action="{{ route('admin.polls.destroy', $poll) }}" onsubmit="return confirm('Weet je het zeker?');">
                         @csrf
                         @method('DELETE')
                         <button class="btn btn-danger" type="submit">Verwijder</button>
                     </form>
+                    @endif
+                    @endif
                 </td>
             </tr>
         @empty

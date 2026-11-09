@@ -37,7 +37,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users',
+            'email' => 'required|string|max:255|unique:users', // e-mail of gebruikersnaam
             'password' => 'required|string|min:8|confirmed',
             'is_admin' => 'boolean',
             'logo' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
@@ -79,7 +79,7 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)], // e-mail of gebruikersnaam
             'is_admin' => 'boolean',
             'logo' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
         ]);

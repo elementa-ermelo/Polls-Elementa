@@ -25,7 +25,7 @@
 
         <div class="mb-4">
             <label for="email" class="block text-gray-700 font-bold mb-2">Email *</label>
-            <input type="email" id="email" name="email" value="{{ old('email', $user->email) }}" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
+            <input type="text" id="email" name="email" autocapitalize="none" value="{{ old('email', $user->email) }}" required class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
         </div>
 
         <div class="mb-6">

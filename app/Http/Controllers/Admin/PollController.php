@@ -28,10 +28,8 @@ class PollController extends Controller
             ->with('user')
             ->withCount(['votes', 'confirmedVotes']);
 
-        // Only show own polls unless admin
-        if (!auth()->check() || !auth()->user()->is_admin) {
-            $query->where('user_id', auth()->id());
-        }
+        // Eigen polls, polls waar je mede-beheerder bent, of alles voor admins
+        $query->visibleTo(auth()->user());
 
         $polls = $query->latest()->paginate(12);
 
@@ -169,7 +167,7 @@ class PollController extends Controller
 
     public function show(Poll $poll): View
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -187,12 +185,13 @@ class PollController extends Controller
             'poll' => $poll,
             'totalRespondents' => $totalRespondents,
             'confirmedRespondents' => $confirmedRespondents,
+            'canManage' => $poll->isManagedBy(auth()->user()),
         ]);
     }
 
     public function downloadPdf(Poll $poll): Response
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -344,7 +343,7 @@ HTML;
 
     public function edit(Poll $poll): View
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -367,7 +366,7 @@ HTML;
 
     public function update(StorePollRequest $request, Poll $poll): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -405,7 +404,7 @@ HTML;
 
     public function destroy(Poll $poll): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isOwnedBy(auth()->user())) {
             abort(403);
         }
 
@@ -416,7 +415,7 @@ HTML;
 
     public function archive(Poll $poll): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -430,7 +429,7 @@ HTML;
 
     public function toggleActive(Poll $poll): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -446,7 +445,7 @@ HTML;
 
     public function deleteVote(Poll $poll, Vote $vote): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -483,7 +482,7 @@ HTML;
 
     public function createQuestion(Poll $poll): View
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -504,7 +503,7 @@ HTML;
 
     public function storeQuestion(Poll $poll): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -529,7 +528,7 @@ HTML;
 
     public function editQuestion(Poll $poll, PollQuestion $question): View
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -558,7 +557,7 @@ HTML;
 
     public function updateQuestion(Poll $poll, PollQuestion $question): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -591,7 +590,7 @@ HTML;
 
     public function destroyQuestion(Poll $poll, PollQuestion $question): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -699,7 +698,7 @@ HTML;
 
     public function exportCsv(Poll $poll): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -768,7 +767,7 @@ HTML;
 
     public function sendEmailForm(Poll $poll): View
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -790,7 +789,7 @@ HTML;
 
     public function sendEmail(Poll $poll): RedirectResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 
@@ -851,7 +850,7 @@ HTML;
 
     public function reorderQuestions(Poll $poll): JsonResponse
     {
-        if (!auth()->user()->is_admin && $poll->user_id !== auth()->id()) {
+        if (! $poll->isManagedBy(auth()->user())) {
             abort(403);
         }
 

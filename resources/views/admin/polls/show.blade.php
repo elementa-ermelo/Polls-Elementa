@@ -29,14 +29,17 @@
         @if($poll->status !== 'archived')
             <a class="btn" href="{{ route('polls.show', $poll) }}" target="_blank" style="font-size: 13px;">👁 Bekijk poll</a>
         @endif
+        @if($canManage)
         @if(!$poll->is_public)
             <a class="btn" href="{{ route('admin.polls.edit', $poll) }}" style="font-size: 13px;">✏️ Bewerk</a>
         @else
             <button class="btn" disabled style="opacity: 0.5; cursor: not-allowed; font-size: 13px;" title="Actieve polls kunnen niet bewerkt worden">✏️ Bewerk</button>
         @endif
         <a class="btn" href="{{ route('admin.polls.send-email-form', $poll) }}" style="font-size: 13px;">📧 Email</a>
+        @endif
         <a class="btn" href="{{ route('admin.polls.download-pdf', $poll) }}" style="font-size: 13px;">📄 PDF</a>
         <a class="btn" href="{{ route('admin.polls.export-csv', $poll) }}" style="font-size: 13px;">📊 CSV</a>
+        @if($canManage)
         <form method="post" action="{{ route('admin.polls.toggle-active', $poll) }}" style="display:inline;">
             @csrf
             <button type="submit" class="btn" style="font-size:13px;">
@@ -47,6 +50,9 @@
             @csrf
             <button type="submit" class="btn" style="font-size:13px; color:var(--muted);">Archiveer</button>
         </form>
+        @else
+            <span style="padding:8px 12px; font-size:13px; color:var(--muted);">👁 Alleen lezen</span>
+        @endif
     </div>
 </div>
 
@@ -93,14 +99,16 @@ function showTab(tab) {
 <div class="card" style="margin-bottom:16px;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
         <h2 style="margin:0; font-size:15px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);">Vragen</h2>
+        @if($canManage)
         <a class="btn btn-primary" href="{{ route('admin.polls.questions.create', $poll) }}" style="font-size:13px;">+ Vraag toevoegen</a>
+        @endif
     </div>
 
     <div id="questions-list" style="display:flex; flex-direction:column; gap:10px;">
         @forelse($poll->questions->sortBy('position') as $question)
             <div class="question-item" data-question-id="{{ $question->id }}" style="padding:14px; border:1.5px dashed var(--line); border-radius:10px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:12px; background:var(--surface); transition:border-color .2s, background .2s;">
                 <div style="display:flex; align-items:center; gap:10px; flex:1 1 260px; min-width:0;">
-                    <span class="drag-handle" title="Sleep om te verplaatsen" aria-hidden="true">⠿</span>
+                    @if($canManage)<span class="drag-handle" title="Sleep om te verplaatsen" aria-hidden="true">⠿</span>@endif
                     <span class="q-num">{{ $loop->iteration }}</span>
                     <div style="flex:1; min-width:0;">
                         <p style="margin:0 0 4px; font-weight:600; font-size:15px;">{{ $question->question }}</p>
@@ -109,6 +117,7 @@ function showTab(tab) {
                         </p>
                     </div>
                 </div>
+                @if($canManage)
                 <div style="display:flex; gap:6px; flex-shrink:0; align-items:center; margin-left:auto;">
                     <button type="button" class="btn move-btn" data-dir="-1" title="Omhoog" aria-label="Vraag omhoog">↑</button>
                     <button type="button" class="btn move-btn" data-dir="1" title="Omlaag" aria-label="Vraag omlaag">↓</button>
@@ -120,13 +129,14 @@ function showTab(tab) {
                         <button class="btn btn-danger" type="submit" style="font-size:13px; padding:6px 12px;">Verwijder</button>
                     </form>
                 </div>
+                @endif
             </div>
         @empty
             <p class="meta" style="text-align:center; padding:20px 0;">Nog geen vragen. <a href="{{ route('admin.polls.questions.create', $poll) }}" style="color:var(--accent);">Eerste vraag toevoegen →</a></p>
         @endforelse
     </div>
 
-    <p class="meta" style="text-align:center; margin-top:12px; font-size:12px; color:var(--muted); display:{{ $poll->questions->count() > 0 ? 'block' : 'none' }};">
+    <p class="meta" style="text-align:center; margin-top:12px; font-size:12px; color:var(--muted); display:{{ $canManage && $poll->questions->count() > 0 ? 'block' : 'none' }};">
         Sleep een vraag aan ⠿ of gebruik ↑ ↓ om de volgorde te wijzigen. <span id="order-status" role="status" aria-live="polite" style="font-weight:600;"></span>
     </p>
     <style>
@@ -277,10 +287,12 @@ function showTab(tab) {
                             <span style="color: #ea580c; font-weight: 700;">⏳ Wacht</span>
                         @endif
                     </div>
+                    @if($canManage)
                     <form method="post" action="{{ route('admin.polls.votes.destroy', [$poll, $respondent['vote_id']]) }}" onsubmit="return confirm('Alle stemmen van deze persoon verwijderen?');">
                         @csrf @method('DELETE')
                         <button class="btn btn-danger" type="submit" style="font-size: 12px; padding: 6px 10px;">✕ Verwijder</button>
                     </form>
+                    @endif
                 </div>
             </div>
         @endforeach
@@ -291,6 +303,7 @@ function showTab(tab) {
 </div>
 </div>
 
+@if($canManage)
 <script src="{{ asset('js/Sortable.min.js') }}"></script>
 <script>
 // Volgorde van vragen: slepen (ook op telefoon/tablet via SortableJS) of met ↑ ↓.
@@ -370,5 +383,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 </script>
+@endif
 
 @endsection

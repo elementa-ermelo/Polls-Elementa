@@ -22,7 +22,7 @@ class ProfileController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . auth()->user()->id,
+            'email' => 'required|string|max:255|unique:users,email,' . auth()->user()->id, // e-mail of gebruikersnaam
             'logo' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
         ]);
 

@@ -12,9 +12,9 @@
             @csrf
 
             <div class="field">
-                <label for="email">E-mailadres</label>
-                <input id="email" type="email" name="email" value="{{ old('email') }}"
-                       placeholder="naam@voorbeeld.nl" required autofocus>
+                <label for="email">E-mailadres of gebruikersnaam</label>
+                <input id="email" type="text" name="email" value="{{ old('email') }}"
+                       placeholder="naam@voorbeeld.nl" autocomplete="username" autocapitalize="none" required autofocus>
                 @error('email')<p style="color: var(--danger); font-size: 13px; margin: 6px 0 0; font-weight: 600;">{{ $message }}</p>@enderror
             </div>
 
