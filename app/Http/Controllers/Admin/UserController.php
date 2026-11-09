@@ -49,8 +49,9 @@ class UserController extends Controller
 
         if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
             $file = $request->file('logo');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $logoPath = $file->storeAs('logos', $filename, 'public');
+            // Willekeurige naam + extensie op basis van de inhoud, nooit de
+            // bestandsnaam van de uploader.
+            $logoPath = $file->store('logos', 'public');
             
             if ($logoPath) {
                 $validated['logo'] = $logoPath;
@@ -93,8 +94,9 @@ class UserController extends Controller
             
             // Store new logo
             $file = $request->file('logo');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $logoPath = $file->storeAs('logos', $filename, 'public');
+            // Willekeurige naam + extensie op basis van de inhoud, nooit de
+            // bestandsnaam van de uploader.
+            $logoPath = $file->store('logos', 'public');
             
             if ($logoPath) {
                 $validated['logo'] = $logoPath;

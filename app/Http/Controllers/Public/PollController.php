@@ -87,13 +87,27 @@ class PollController extends Controller
         }
 
         $respondentName = $request->string('respondent_name')->toString();
-        $email          = $request->string('email')->toString();
+        $email          = mb_strtolower(trim($request->string('email')->toString()));
         $phone          = $request->string('phone')->toString();
         $age            = $request->integer('age');
         $token          = Str::uuid()->toString();
+        $needsConfirm   = (bool) $poll->requires_confirmation;
+
+        // Wie al (bevestigd) heeft ingevuld, kan niet overschreven worden door
+        // iemand die alleen het e-mailadres weet. Vroeger kon dat wel: een tweede
+        // inzending met hetzelfde adres verving de antwoorden van de eerste.
+        $alreadyAnswered = Vote::query()
+            ->where('poll_id', $poll->id)
+            ->where('email', $email)
+            ->whereNotNull('confirmed_at')
+            ->exists();
+
+        if ($alreadyAnswered) {
+            return back()->withInput()->with('error', 'Met dit e-mailadres is deze vragenlijst al ingevuld.');
+        }
 
         try {
-            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token): void {
+            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token, $needsConfirm): void {
                 $questions = $poll->questions()->get();
                 $isFirstQuestion = true;
 
@@ -130,11 +144,17 @@ class PollController extends Controller
                         'open_answer'     => $openAnswer,
                     ];
 
-                    if ($isFirstQuestion) {
+                    if (! $needsConfirm) {
+                        // Geen e-mailbevestiging voor deze poll: telt direct mee.
+                        $updateData['confirmation_token']   = null;
+                        $updateData['confirmed_at']         = now();
+                    } elseif ($isFirstQuestion) {
                         $updateData['confirmation_token']   = $token;
                         $updateData['confirmation_sent_at'] = now();
                         $updateData['confirmed_at']         = null;
                         $isFirstQuestion = false;
+                    } else {
+                        $updateData['confirmed_at']         = null;
                     }
 
                     Vote::query()->updateOrCreate(
@@ -153,7 +173,12 @@ class PollController extends Controller
                 'poll_id' => $poll->id,
                 'email' => $email,
             ]);
-            return back()->with('error', 'Er is een fout opgetreden: ' . $e->getMessage())->withInput();
+            return back()->with('error', 'Je antwoorden konden niet worden opgeslagen. Probeer het nog een keer.')->withInput();
+        }
+
+        if (! $needsConfirm) {
+            return redirect()->route('polls.show', $poll)
+                ->with('success', '✓ Bedankt! Je antwoorden zijn opgeslagen.');
         }
 
         // Stem is opgeslagen — mail apart versturen
@@ -163,7 +188,7 @@ class PollController extends Controller
             $message .= "Bedankt voor het invullen van de poll '{$poll->title}'.\n\n";
             $message .= "Bevestig je stem via deze link:\n";
             $message .= $confirmUrl . "\n\n";
-            $message .= "Deze link verloopt over 24 uur.\n\n";
+            $message .= "Deze link is 7 dagen geldig.\n\n";
             $message .= "Met vriendelijke groeten,\n";
             $message .= "Polls Elementa";
 
@@ -197,6 +222,10 @@ class PollController extends Controller
 
         if (! $vote) {
             return redirect()->route('polls.index')->with('error', 'Ongeldige of verlopen bevestigingslink.');
+        }
+
+        if ($vote->confirmation_sent_at && \Illuminate\Support\Carbon::parse($vote->confirmation_sent_at)->lt(now()->subDays(7))) {
+            return redirect()->route('polls.index')->with('error', 'Deze bevestigingslink is verlopen. Vul de vragenlijst opnieuw in om een nieuwe link te krijgen.');
         }
 
         $poll = $vote->poll;

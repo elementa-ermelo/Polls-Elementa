@@ -14,15 +14,22 @@
 
     <div class="field">
         <label for="question">Vraag</label>
-        <div style="display: flex; gap: 8px; align-items: flex-start;">
-            <textarea id="question" name="question" rows="2" required style="flex: 1;">{{ old('question', $question->question) }}</textarea>
-            <button type="button" class="btn" id="add-help-btn" style="padding: 8px 12px; margin-top: 4px; white-space: nowrap; font-size: 20px;" title="Voeg extra informatie toe">
-                ℹ️
-            </button>
-        </div>
+        <textarea id="question" name="question" rows="2" required>{{ old('question', $question->question) }}</textarea>
+        @error('question')<p class="field-error">{{ $message }}</p>@enderror
     </div>
 
-    <input type="hidden" id="help_text" name="help_text" value="{{ old('help_text', $question->help_text ?? '') }}">
+    <div class="field">
+        <label for="help_text">Toelichting <span style="font-weight:400; color:var(--muted);">(optioneel, staat klein onder de vraag)</span></label>
+        <textarea id="help_text" name="help_text" rows="2" placeholder="Bijvoorbeeld: denk hierbij aan de afgelopen 12 maanden">{{ old('help_text', $question->help_text ?? '') }}</textarea>
+        @error('help_text')<p class="field-error">{{ $message }}</p>@enderror
+    </div>
+
+    @if($question->exists && ($answerCount = $question->votes()->count()) > 0)
+        <div style="padding:12px 14px; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; margin-bottom:16px; font-size:14px; color:#9a3412;">
+            Op deze vraag zijn al {{ $answerCount }} antwoorden gegeven. Tekst aanpassen en opties hernoemen kan zonder dat er iets verloren gaat;
+            het type ligt vast. Haal je een optie weg, dan verliezen de antwoorden op díé optie hun keuze.
+        </div>
+    @endif
 
     <div class="field">
         <label for="type">Type poll</label>

@@ -54,9 +54,35 @@
         <div class="field" style="max-width:280px;">
             <label for="access_code">Toegangscode <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
             <input id="access_code" type="text" name="access_code" placeholder="Laat leeg voor openbare poll" value="{{ old('access_code', $poll->access_code ?? '') }}" style="text-transform:uppercase;">
-            <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Als je een code instelt, moeten deelnemers deze invoeren om de poll in te vullen.</p>
+            <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Als je een code instelt, moeten deelnemers deze invoeren om de poll in te vullen. Minimaal 6 tekens.</p>
+            @error('access_code')<p class="field-error">{{ $message }}</p>@enderror
+        </div>
+
+        @php
+            $confirmOn = (bool) old('requires_confirmation', $poll->exists ? $poll->requires_confirmation : false);
+        @endphp
+        <div class="field">
+            <input type="hidden" name="requires_confirmation" value="0">
+            <label class="switch-row" for="requires_confirmation">
+                <input type="checkbox" id="requires_confirmation" name="requires_confirmation" value="1" class="switch-input" @checked($confirmOn)>
+                <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+                <span>
+                    <strong>Bevestiging per e-mail</strong><br>
+                    <span style="font-size:12px; color:var(--muted);">Aan: deelnemers krijgen een mail met een link en tellen pas mee als ze daarop klikken (tegen nep-inzendingen, maar een deel klikt nooit). Uit: antwoorden tellen direct mee.</span>
+                </span>
+            </label>
         </div>
     </div>
+
+    <style>
+        .switch-row { display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-weight:400; }
+        .switch-input { position:absolute; opacity:0; width:1px; height:1px; }
+        .switch-track { flex-shrink:0; width:44px; height:24px; border-radius:12px; background:#cbd5e1; position:relative; transition:background .2s; margin-top:2px; }
+        .switch-knob { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+        .switch-input:checked + .switch-track { background:var(--primary); }
+        .switch-input:checked + .switch-track .switch-knob { left:23px; }
+        .switch-input:focus-visible + .switch-track { outline:2px solid var(--primary); outline-offset:2px; }
+    </style>
 
     {{-- Vragen --}}
     @if(!$poll->exists)

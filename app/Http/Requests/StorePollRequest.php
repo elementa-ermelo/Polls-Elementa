@@ -23,7 +23,8 @@ class StorePollRequest extends FormRequest
             'closes_at' => ['nullable', 'date', 'after_or_equal:opens_at'],
             'is_public' => ['nullable', 'boolean'],
             'questions_json' => ['nullable', 'string'],
-            'access_code' => ['nullable', 'string', 'max:50'],
+            'access_code' => ['nullable', 'string', 'min:6', 'max:50'],
+            'requires_confirmation' => ['nullable', 'boolean'],
         ];
     }
 
@@ -33,6 +34,7 @@ class StorePollRequest extends FormRequest
             'closes_at.after_or_equal' => '"Sluit op" moet gelijk of later zijn dan "Open vanaf".',
             'opens_at.date' => '"Open vanaf" heeft geen geldige datum/tijd.',
             'closes_at.date' => '"Sluit op" heeft geen geldige datum/tijd.',
+            'access_code.min' => 'Een toegangscode moet minstens 6 tekens lang zijn, anders is hij te makkelijk te raden.',
         ];
     }
 

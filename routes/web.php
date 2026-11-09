@@ -4,23 +4,28 @@ use App\Http\Controllers\Admin\PollController as AdminPollController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
-use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Public\PollController as PublicPollController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PublicPollController::class, 'index'])->name('polls.index');
 Route::get('/polls/{poll}', [PublicPollController::class, 'show'])->name('polls.show');
-Route::post('/polls/{poll}/verify-access-code', [PublicPollController::class, 'verifyAccessCode'])->name('polls.verify-access-code');
-Route::post('/polls/{poll}/vote', [PublicPollController::class, 'vote'])->name('polls.vote');
-Route::get('/polls/confirm/{token}', [PublicPollController::class, 'confirm'])->name('polls.confirm');
+// Remmen per IP-adres: tegen code raden en tegen het misbruiken van het
+// stemformulier om bevestigingsmails naar willekeurige adressen te sturen.
+Route::post('/polls/{poll}/verify-access-code', [PublicPollController::class, 'verifyAccessCode'])
+    ->middleware('throttle:10,1')->name('polls.verify-access-code');
+Route::post('/polls/{poll}/vote', [PublicPollController::class, 'vote'])
+    ->middleware('throttle:10,1')->name('polls.vote');
+Route::get('/polls/confirm/{token}', [PublicPollController::class, 'confirm'])
+    ->middleware('throttle:30,1')->name('polls.confirm');
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [LoginController::class, 'login']);
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
-Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
-Route::post('/register', [RegisterController::class, 'register']);
+// Zelf registreren staat uit (9 nov 2026): accounts maakt een admin aan via
+// Beheer > Gebruikers. Een open registratie gaf vreemden een poll op ons domein
+// en een manier om via onze mailserver mail te laten versturen.
 
 Route::middleware('auth')->group(function (): void {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -60,14 +65,3 @@ Route::prefix('admin')->name('admin.')->middleware('auth')->group(function (): v
     Route::get('/reports/archive', [ReportController::class, 'archive'])->name('reports.archive');
     Route::post('/reports/{poll}/reactivate', [ReportController::class, 'reactivate'])->name('reports.reactivate');
 });
-
-// Serve storage files directly without symlink (workaround for Windows)
-Route::get('/storage/{path}', function ($path) {
-    $fullPath = storage_path('app/public/' . $path);
-    
-    if (!file_exists($fullPath)) {
-        abort(404);
-    }
-    
-    return response()->file($fullPath);
-})->where('path', '.*');

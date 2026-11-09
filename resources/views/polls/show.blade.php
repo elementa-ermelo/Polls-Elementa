@@ -36,17 +36,23 @@
             <span>💡</span> Hoe werkt het indienen?
         </h3>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
-            <strong>1. Vul je gegevens in</strong> — We vragen je naam, e-mailadres, telefoonnummer en leeftijd zodat we kunnen verifiëren dat je echt bent.
+            <strong>1. Vul je gegevens in</strong> — We vragen je naam en e-mailadres; telefoonnummer en leeftijd zijn optioneel.
         </p>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
             <strong>2. Beantwoord de vragen</strong> — Geef je eerlijke mening.
         </p>
+        @if($poll->requires_confirmation)
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
-            <strong>3. Verstuur en bevestig</strong> — Na verzending krijg je direct een e-mail met een bevestigingslink. 
-            Klik erop binnen 24 uur en je stem telt mee! 📧
+            <strong>3. Verstuur en bevestig</strong> — Na verzending krijg je direct een e-mail met een bevestigingslink.
+            Klik erop binnen 7 dagen en je antwoorden tellen mee! 📧
         </p>
+        @else
+        <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
+            <strong>3. Verstuur</strong> — Je antwoorden tellen direct mee.
+        </p>
+        @endif
         <p style="margin:0; color:#1e40af; font-size:13px; opacity:0.9; font-style:italic;">
-            ✨ Jouw perspective is waardevol — bedankt dat je meedoet!
+            ✨ Jouw mening is waardevol — bedankt dat je meedoet!
         </p>
     </div>
 
@@ -161,6 +167,9 @@
                         <div style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
                         <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $question->question }}</h3>
                     </div>
+                    @if($question->help_text)
+                        <p style="margin:-8px 0 14px 38px; font-size:14px; color:var(--muted); line-height:1.5; white-space:pre-line;">{{ $question->help_text }}</p>
+                    @endif
 
                     @if(\App\Support\PollType::isOpenTextType($question->type))
                         <div class="field" style="margin:0;">
@@ -171,12 +180,13 @@
 
                     @elseif($question->type === \App\Support\PollType::RATING_STARS)
                         <div class="star-wrap">
-                            @foreach(range(5,1) as $val)
-                                @php($sid = 'q'.$question->id.'_r'.$val)
+                            {{-- Waarde = id van de optie (vroeger 1..5, wat als optie-id werd gelezen en dus leeg werd opgeslagen) --}}
+                            @foreach($question->options->sortByDesc('position') as $option)
+                                @php($sid = 'q'.$question->id.'_o'.$option->id)
                                 <input id="{{ $sid }}" class="star-inp" type="radio"
-                                    name="question_{{ $question->id }}" value="{{ $val }}"
-                                    @checked((string) old('question_'.$question->id) === (string) $val)>
-                                <label for="{{ $sid }}" class="star-lbl" title="{{ $val }} ster{{ $val > 1 ? 'ren' : '' }}">★</label>
+                                    name="question_{{ $question->id }}" value="{{ $option->id }}"
+                                    @checked((string) old('question_'.$question->id) === (string) $option->id)>
+                                <label for="{{ $sid }}" class="star-lbl" title="{{ $option->label }}">★</label>
                             @endforeach
                         </div>
 
@@ -207,7 +217,11 @@
                 {{-- Submit --}}
                 <div class="card" style="padding:20px; text-align:center;">
                     <p style="margin:0 0 14px; color:var(--muted); font-size:14px;">
-                        Na het versturen ontvangt u een bevestigingsmail om uw stem te bevestigen.
+                        @if($poll->requires_confirmation)
+                            Na het versturen ontvangt u een bevestigingsmail om uw antwoorden te bevestigen.
+                        @else
+                            U kunt de lijst één keer per e-mailadres invullen.
+                        @endif
                     </p>
                     <button type="submit" class="btn btn-primary"
                             style="padding:12px 40px; font-size:16px; border-radius:10px; width:100%; max-width:360px;">

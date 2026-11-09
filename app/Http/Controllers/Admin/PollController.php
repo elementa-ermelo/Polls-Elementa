@@ -83,7 +83,10 @@ class PollController extends Controller
         try {
             $poll = DB::transaction(function () use ($request) {
                 $status = $request->validated('status');
-                $isPublic = (bool) $request->boolean('is_public');
+                // Zichtbaar voor deelnemers = status Live. Vroeger kwam dit uit een
+                // verborgen veld dat altijd 1 was, waardoor elke nieuwe poll meteen
+                // openbaar stond en daarna niet meer te bewerken was.
+                $isPublic = $status === 'active';
                 $accessCode = $request->input('access_code');
                 
                 // Generate unique access code if provided
@@ -102,6 +105,7 @@ class PollController extends Controller
                     'closes_at' => $request->validated('closes_at'),
                     'is_public' => $isPublic,
                     'access_code' => $accessCode,
+                    'requires_confirmation' => $request->boolean('requires_confirmation'),
                     'user_id' => auth()->id(),
                 ]);
 
@@ -116,11 +120,17 @@ class PollController extends Controller
                 try {
                     $questions = json_decode($questionsJson, true) ?? [];
                     
-                    foreach ($questions as $qData) {
+                    foreach (array_values($questions) as $index => $qData) {
+                        $type = $qData['type'] ?? $poll->type;
+                        if (! array_key_exists($type, PollType::labels())) {
+                            $type = 'closed';
+                        }
+
                         $question = $poll->questions()->create([
-                            'question' => $qData['question'] ?? '',
-                            'type' => $qData['type'] ?? $poll->type,
-                            'position' => $qData['position'] ?? 0,
+                            'question' => mb_substr((string) ($qData['question'] ?? ''), 0, 1000),
+                            'help_text' => isset($qData['help_text']) ? mb_substr((string) $qData['help_text'], 0, 2000) : null,
+                            'type' => $type,
+                            'position' => $index,
                         ]);
                         
                         $this->syncQuestionOptions($question, implode("\n", $qData['options'] ?? []));
@@ -153,7 +163,7 @@ class PollController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            return redirect()->back()->withErrors(['error' => 'Fout bij aanmaken poll: ' . $e->getMessage()]);
+            return redirect()->back()->withInput()->withErrors(['error' => 'De poll kon niet worden aangemaakt. Probeer het opnieuw; blijft het misgaan, meld het dan.']);
         }
     }
 
@@ -212,7 +222,7 @@ class PollController extends Controller
                     ];
                 });
 
-            $filename = 'antwoorden_' . str_replace(' ', '_', $poll->title) . '_' . now()->format('Y-m-d') . '.pdf';
+            $filename = 'antwoorden_' . \Illuminate\Support\Str::slug($poll->title, '_') . '_' . now()->format('Y-m-d') . '.pdf';
 
             // Generate simple HTML directly
             $html = $this->generatePdfHtml($poll, $respondents, $totalRespondents, $confirmedRespondents);
@@ -339,7 +349,8 @@ HTML;
         }
 
         if ($poll->is_public) {
-            abort(403, 'Je kunt een actieve poll niet bewerken.');
+            return redirect()->route('admin.polls.show', $poll)
+                ->with('error', 'Deze poll staat live. Zet hem eerst op inactief om de gegevens te bewerken.');
         }
 
         $optionsText = '';
@@ -361,7 +372,8 @@ HTML;
         }
 
         if ($poll->is_public) {
-            abort(403, 'Je kunt een actieve poll niet bewerken.');
+            return redirect()->route('admin.polls.show', $poll)
+                ->with('error', 'Deze poll staat live. Zet hem eerst op inactief om de gegevens te bewerken.');
         }
 
         return DB::transaction(function () use ($request, $poll) {
@@ -382,8 +394,9 @@ HTML;
                 'status' => $status,
                 'opens_at' => $request->validated('opens_at'),
                 'closes_at' => $request->validated('closes_at'),
-                'is_public' => $status !== 'archived',
+                'is_public' => $status === 'active',
                 'access_code' => $accessCode,
+                'requires_confirmation' => $request->boolean('requires_confirmation'),
             ]);
 
             return redirect()->route('admin.polls.show', $poll)->with('success', 'Poll bijgewerkt.');
@@ -464,7 +477,7 @@ HTML;
                 'error' => $e->getMessage(),
             ]);
 
-            return back()->with('error', 'Fout bij verwijderen respondent: ' . $e->getMessage());
+            return back()->with('error', 'De respondent kon niet worden verwijderd.');
         }
     }
 
@@ -495,12 +508,15 @@ HTML;
             abort(403);
         }
 
-        return DB::transaction(function () use ($poll) {
+        $data = $this->validateQuestion();
+
+        return DB::transaction(function () use ($poll, $data) {
             $position = $poll->questions()->max('position') ?? -1;
 
             $question = $poll->questions()->create([
-                'question' => request()->string('question')->toString(),
-                'type' => request()->string('type')->toString(),
+                'question' => $data['question'],
+                'help_text' => $data['help_text'] ?? null,
+                'type' => $data['type'],
                 'position' => $position + 1,
             ]);
 
@@ -550,10 +566,20 @@ HTML;
             abort(404);
         }
 
-        return DB::transaction(function () use ($poll, $question) {
+        $data = $this->validateQuestion();
+
+        // Zijn er al antwoorden, dan mag het type niet meer om: de gegeven
+        // antwoorden passen dan niet meer bij de vraag.
+        $answerCount = $question->votes()->count();
+        if ($answerCount > 0 && $data['type'] !== $question->type) {
+            return back()->withInput()->with('error', "Op deze vraag zijn al {$answerCount} antwoorden gegeven. Het type kan daarom niet meer worden gewijzigd.");
+        }
+
+        return DB::transaction(function () use ($poll, $question, $data) {
             $question->update([
-                'question' => request()->string('question')->toString(),
-                'type' => request()->string('type')->toString(),
+                'question' => $data['question'],
+                'help_text' => $data['help_text'] ?? null,
+                'type' => $data['type'],
             ]);
 
             $optionsText = request()->input('options_text', '');
@@ -578,6 +604,28 @@ HTML;
         return back()->with('success', 'Vraag verwijderd.');
     }
 
+    /** @return array{question: string, help_text: ?string, type: string} */
+    private function validateQuestion(): array
+    {
+        return request()->validate([
+            'question' => ['required', 'string', 'max:1000'],
+            'help_text' => ['nullable', 'string', 'max:2000'],
+            'type' => ['required', 'string', \Illuminate\Validation\Rule::in(array_keys(PollType::labels()))],
+            'options_text' => ['nullable', 'string', 'max:20000'],
+        ], [
+            'question.required' => 'Vul de vraag in.',
+        ]);
+    }
+
+    /**
+     * Zet de antwoordopties van een vraag gelijk aan de opgegeven lijst.
+     *
+     * Opties worden op volgorde BIJGEWERKT in plaats van weggegooid en opnieuw
+     * aangemaakt. Vroeger verloren alle al gegeven antwoorden op een vraag hun
+     * optie (poll_option_id werd NULL) zodra je de vraag opsloeg, ook bij alleen
+     * een tikfout in de vraagtekst. Nu houdt optie 1 zijn id, optie 2 ook, enz.
+     * Alleen opties die echt uit de lijst verdwijnen worden verwijderd.
+     */
     private function syncQuestionOptions(PollQuestion $question, $optionsText): void
     {
         if ($question->type === PollType::RATING_STARS) {
@@ -597,9 +645,29 @@ HTML;
             $options = collect(PollType::defaults($question->type));
         }
 
-        $question->options()->delete();
+        $options = $options->values();
+        $existing = $question->options()->get()->values();
 
-        foreach ($options->values() as $index => $label) {
+        // 1. Opties waarvan de tekst gelijk bleef, houden hun eigen rij.
+        $assigned = [];   // index nieuwe lijst => PollOption
+        $used = [];
+        foreach ($options as $index => $label) {
+            $match = $existing->first(fn ($o) => ! isset($used[$o->id]) && $o->label === $label);
+            if ($match) {
+                $assigned[$index] = $match;
+                $used[$match->id] = true;
+            }
+        }
+
+        // 2. Nieuwe teksten nemen een vrijgekomen rij over (= hernoemd), op volgorde.
+        $free = $existing->reject(fn ($o) => isset($used[$o->id]))->values();
+        foreach ($options as $index => $label) {
+            if (! isset($assigned[$index]) && $free->isNotEmpty()) {
+                $assigned[$index] = $free->shift();
+            }
+        }
+
+        foreach ($options as $index => $label) {
             $eventDate = null;
 
             if (PollType::needsDateParsing($question->type)) {
@@ -610,14 +678,23 @@ HTML;
                 }
             }
 
-            $question->options()->create([
+            $attributes = [
                 'poll_id' => $question->poll_id,
                 'label' => $label,
                 'value' => $label,
                 'position' => $index,
                 'event_date' => $eventDate,
-            ]);
+            ];
+
+            if (isset($assigned[$index])) {
+                $assigned[$index]->update($attributes);
+            } else {
+                $question->options()->create($attributes);
+            }
         }
+
+        // 3. Wat overblijft is echt uit de lijst gehaald.
+        $free->each->delete();
     }
 
     public function exportCsv(Poll $poll): \Symfony\Component\HttpFoundation\StreamedResponse
@@ -626,7 +703,7 @@ HTML;
             abort(403);
         }
 
-        $filename = "stemmen_" . $poll->title . "_" . now()->format('Y-m-d') . ".csv";
+        $filename = 'stemmen_' . \Illuminate\Support\Str::slug($poll->title, '_') . '_' . now()->format('Y-m-d') . '.csv';
 
         $headers = [
             'Content-Type' => 'text/csv; charset=utf-8',

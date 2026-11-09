@@ -98,9 +98,10 @@ function showTab(tab) {
 
     <div id="questions-list" style="display:flex; flex-direction:column; gap:10px;">
         @forelse($poll->questions->sortBy('position') as $question)
-            <div class="question-item" draggable="true" data-question-id="{{ $question->id }}" style="padding:14px; border:1.5px dashed var(--line); border-radius:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; background:var(--surface); cursor:grab; transition:all .2s;">
-                <div style="display:flex; align-items:center; gap:10px; flex:1; min-width:0;">
-                    <span style="color:var(--muted); cursor:grab; font-size:20px; flex-shrink:0;">⋮</span>
+            <div class="question-item" data-question-id="{{ $question->id }}" style="padding:14px; border:1.5px dashed var(--line); border-radius:10px; display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-start; gap:12px; background:var(--surface); transition:border-color .2s, background .2s;">
+                <div style="display:flex; align-items:center; gap:10px; flex:1 1 260px; min-width:0;">
+                    <span class="drag-handle" title="Sleep om te verplaatsen" aria-hidden="true">⠿</span>
+                    <span class="q-num">{{ $loop->iteration }}</span>
                     <div style="flex:1; min-width:0;">
                         <p style="margin:0 0 4px; font-weight:600; font-size:15px;">{{ $question->question }}</p>
                         <p class="meta" style="margin:0; font-size:13px;">
@@ -108,9 +109,13 @@ function showTab(tab) {
                         </p>
                     </div>
                 </div>
-                <div style="display:flex; gap:6px; flex-shrink:0;">
+                <div style="display:flex; gap:6px; flex-shrink:0; align-items:center; margin-left:auto;">
+                    <button type="button" class="btn move-btn" data-dir="-1" title="Omhoog" aria-label="Vraag omhoog">↑</button>
+                    <button type="button" class="btn move-btn" data-dir="1" title="Omlaag" aria-label="Vraag omlaag">↓</button>
                     <a class="btn" href="{{ route('admin.polls.questions.edit', [$poll, $question]) }}" style="font-size:13px; padding:6px 12px;">Bewerk</a>
-                    <form method="post" action="{{ route('admin.polls.questions.destroy', [$poll, $question]) }}" onsubmit="return confirm('Vraag verwijderen?');">
+                    <form method="post" action="{{ route('admin.polls.questions.destroy', [$poll, $question]) }}"
+                          data-confirm="{{ $question->votes->count() > 0 ? 'Op deze vraag zijn al '.$question->votes->count().' antwoorden gegeven. Die gaan verloren als je de vraag verwijdert. Toch verwijderen?' : 'Vraag verwijderen?' }}"
+                          onsubmit="return confirm(this.dataset.confirm);">
                         @csrf @method('DELETE')
                         <button class="btn btn-danger" type="submit" style="font-size:13px; padding:6px 12px;">Verwijder</button>
                     </form>
@@ -122,8 +127,15 @@ function showTab(tab) {
     </div>
 
     <p class="meta" style="text-align:center; margin-top:12px; font-size:12px; color:var(--muted); display:{{ $poll->questions->count() > 0 ? 'block' : 'none' }};">
-        💡 Je kunt vragen slepen om de volgorde te wijzigen
+        Sleep een vraag aan ⠿ of gebruik ↑ ↓ om de volgorde te wijzigen. <span id="order-status" role="status" aria-live="polite" style="font-weight:600;"></span>
     </p>
+    <style>
+        .drag-handle { color:var(--muted); cursor:grab; font-size:20px; flex-shrink:0; padding:6px 4px; touch-action:none; user-select:none; }
+        .q-num { min-width:24px; height:24px; border-radius:50%; background:var(--line); font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+        .move-btn { font-size:14px; padding:6px 10px; line-height:1; }
+        .question-item.sortable-ghost { opacity:.4; border-style:solid !important; border-color:var(--primary) !important; }
+        .question-item.sortable-chosen { background:rgba(59,130,246,.06) !important; }
+    </style>
 </div>
 
 </div>
@@ -279,85 +291,83 @@ function showTab(tab) {
 </div>
 </div>
 
+<script src="{{ asset('js/Sortable.min.js') }}"></script>
 <script>
-// Drag-and-drop voor vragen - wacht tot pagina volledig geladen is
+// Volgorde van vragen: slepen (ook op telefoon/tablet via SortableJS) of met ↑ ↓.
+// Na elke wijziging wordt de volgorde opgeslagen en zie je of dat lukte.
 document.addEventListener('DOMContentLoaded', () => {
-    let draggedElement = null;
+    const list = document.getElementById('questions-list');
+    const status = document.getElementById('order-status');
+    if (!list || !list.querySelector('.question-item')) return;
 
-    const questionItems = document.querySelectorAll('.question-item');
+    let lastSavedOrder = currentOrder();
 
-    questionItems.forEach(item => {
-        item.addEventListener('dragstart', (e) => {
-            draggedElement = item;
-            item.style.opacity = '0.5';
-            item.style.borderStyle = 'solid';
-            e.dataTransfer.effectAllowed = 'move';
-        });
+    function currentOrder() {
+        return [...list.querySelectorAll('.question-item')].map(el => el.dataset.questionId);
+    }
 
-        item.addEventListener('dragend', (e) => {
-            item.style.opacity = '1';
-            item.style.borderStyle = 'dashed';
-            draggedElement = null;
-        });
+    function renumber() {
+        list.querySelectorAll('.question-item .q-num').forEach((el, i) => el.textContent = i + 1);
+    }
 
-        item.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            
-            if (item !== draggedElement) {
-                item.style.borderTop = '3px solid var(--primary)';
-            }
-        });
+    function show(text, ok) {
+        status.textContent = text;
+        status.style.color = ok ? 'var(--success, #15803d)' : 'var(--danger, #b91c1c)';
+        if (ok) setTimeout(() => { if (status.textContent === text) status.textContent = ''; }, 2500);
+    }
 
-        item.addEventListener('dragleave', (e) => {
-            item.style.borderTop = '';
-        });
+    function restore(order) {
+        order.forEach(id => list.appendChild(list.querySelector(`.question-item[data-question-id="${id}"]`)));
+        renumber();
+    }
 
-        item.addEventListener('drop', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            if (item !== draggedElement) {
-                const list = document.getElementById('questions-list');
-                const allItems = [...list.querySelectorAll('.question-item')];
-                const draggedIndex = allItems.indexOf(draggedElement);
-                const targetIndex = allItems.indexOf(item);
+    async function saveOrder() {
+        renumber();
+        const order = currentOrder();
+        show('Opslaan…', true);
+        try {
+            const res = await fetch(@js(route('admin.polls.questions.reorder', $poll)), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                },
+                body: JSON.stringify({ order }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success) throw new Error(res.status === 419 ? 'sessie verlopen' : (data.error || 'HTTP ' + res.status));
+            lastSavedOrder = order;
+            show('✓ Volgorde opgeslagen', true);
+        } catch (err) {
+            restore(lastSavedOrder);
+            show('Volgorde NIET opgeslagen (' + err.message + '). Herlaad de pagina en probeer opnieuw.', false);
+        }
+    }
 
-                if (draggedIndex < targetIndex) {
-                    item.insertAdjacentElement('afterend', draggedElement);
-                } else {
-                    item.insertAdjacentElement('beforebegin', draggedElement);
-                }
-
-                item.style.borderTop = '';
-                saveOrder();
-            }
-        });
+    Sortable.create(list, {
+        handle: '.drag-handle',
+        draggable: '.question-item',
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        chosenClass: 'sortable-chosen',
+        onEnd: (evt) => { if (evt.oldIndex !== evt.newIndex) saveOrder(); },
     });
 
-    function saveOrder() {
-        const list = document.getElementById('questions-list');
-        const order = [];
-        list.querySelectorAll('.question-item').forEach((item, index) => {
-            order.push(item.getAttribute('data-question-id'));
-        });
-
-        fetch('{{ route("admin.polls.questions.reorder", $poll) }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({ order: order })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (!data.success) {
-                console.error('Fout bij opslaan volgorde:', data.error);
-            }
-        })
-        .catch(err => console.error('Fout:', err));
-    }
+    list.addEventListener('click', (e) => {
+        const btn = e.target.closest('.move-btn');
+        if (!btn) return;
+        const item = btn.closest('.question-item');
+        if (btn.dataset.dir === '-1' && item.previousElementSibling) {
+            list.insertBefore(item, item.previousElementSibling);
+        } else if (btn.dataset.dir === '1' && item.nextElementSibling) {
+            list.insertBefore(item.nextElementSibling, item);
+        } else {
+            return;
+        }
+        saveOrder();
+        btn.focus();
+    });
 });
 </script>
 

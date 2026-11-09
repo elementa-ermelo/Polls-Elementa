@@ -33,7 +33,7 @@
         <div style="border-top: 1px solid var(--line); margin: 28px 0;"></div>
 
         <p style="margin: 0; text-align: center; font-size: 14px; color: var(--muted);">
-            Nog geen account? <a href="{{ route('register') }}" style="color: var(--primary); font-weight: 700; text-decoration: none;">Account aanmaken</a>
+            Nog geen account? Vraag er een aan bij Elementa.
         </p>
     </div>
 </div>

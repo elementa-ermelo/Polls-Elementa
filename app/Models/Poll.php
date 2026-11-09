@@ -20,6 +20,7 @@ class Poll extends Model
         'closes_at',
         'is_public',
         'access_code',
+        'requires_confirmation',
         'user_id',
     ];
 
@@ -29,6 +30,7 @@ class Poll extends Model
             'opens_at' => 'datetime',
             'closes_at' => 'datetime',
             'is_public' => 'boolean',
+            'requires_confirmation' => 'boolean',
         ];
     }
 

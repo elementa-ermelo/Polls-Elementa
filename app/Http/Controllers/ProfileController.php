@@ -32,22 +32,15 @@ class ProfileController extends Controller
             }
             
             $file = $request->file('logo');
-            $filename = time() . '_' . $file->getClientOriginalName();
-            $logoPath = $file->storeAs('logos', $filename, 'public');
-
-            \Log::info('Logo debug', [
-                'logoPath' => $logoPath,
-                'validated_logo' => $validated['logo'] ?? 'NOT SET',
-            ]);
+            // Willekeurige naam + extensie op basis van de inhoud, nooit de
+            // bestandsnaam van de uploader.
+            $logoPath = $file->store('logos', 'public');
             
             if ($logoPath) {
                 $validated['logo'] = $logoPath;
             }
         }
-
-        \Log::info('Before update', ['validated' => $validated]);
         auth()->user()->update($validated);
-        \Log::info('After update', ['user_logo' => auth()->user()->fresh()->logo]);
 
         return back()->with('success', 'Profiel bijgewerkt.');
     }
