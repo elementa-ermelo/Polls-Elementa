@@ -20,7 +20,10 @@ Route::get('/polls/confirm/{token}', [PublicPollController::class, 'confirm'])
     ->middleware('throttle:30,1')->name('polls.confirm');
 
 Route::get('/login', [LoginController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [LoginController::class, 'login']);
+Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:login');
+Route::get('/login/code', [LoginController::class, 'codeScherm'])->name('login.code');
+Route::post('/login/code', [LoginController::class, 'codeControle'])->middleware('throttle:login')->name('login.code.controle');
+Route::post('/login/code/opnieuw', [LoginController::class, 'codeOpnieuw'])->middleware('throttle:6,1')->name('login.code.opnieuw');
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 // Zelf registreren staat uit (9 nov 2026): accounts maakt een admin aan via

@@ -350,7 +350,6 @@
         </form>
     @else
         <div class="nav-spacer"></div>
-        <a href="{{ route('login') }}" class="btn" style="font-size:14px;">Inloggen</a>
     @endauth
 </nav>
 

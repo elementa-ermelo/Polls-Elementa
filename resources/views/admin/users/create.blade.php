@@ -45,6 +45,15 @@
         </div>
 
         <div class="mb-6">
+            <label for="two_factor_enabled" class="flex items-center">
+                <input type="hidden" name="two_factor_enabled" value="0">
+                <input type="checkbox" id="two_factor_enabled" name="two_factor_enabled" value="1" {{ old('two_factor_enabled', true) ? 'checked' : '' }} class="mr-3">
+                <span class="text-gray-700 font-bold">Inlogcode per e-mail (2FA)</span>
+            </label>
+            <p style="font-size:12px; color:#6b7280; margin:4px 0 0;">Werkt alleen als het account een e-mailadres heeft.</p>
+        </div>
+
+        <div class="mb-6">
             <label for="logo" class="block text-gray-700 font-bold mb-2">Logo</label>
             <input type="file" id="logo" name="logo" accept="image/jpeg,image/png,image/gif" class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:border-blue-500">
         </div>

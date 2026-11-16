@@ -95,6 +95,15 @@ class PollController extends Controller
             }
         }
 
+        // Spamrem (lokveld, robotbrowser, kaartje, vrije tekst, StopForumSpam, plafond): zie Formulierrem.
+        $rem = \App\Support\Formulierrem::controleer($request, $poll);
+        if ($rem === 'verlopen') {
+            return back()->withInput()->with('error', 'Deze pagina stond te lang open. Uw antwoorden staan er nog; wilt u ze opnieuw versturen?');
+        }
+        if ($rem === 'stil') {
+            return redirect()->route('polls.show', $poll)->with('success', 'Bedankt. Uw antwoorden zijn opgeslagen.');
+        }
+
         $questions = $poll->questions()->get();
         if ($questions->isEmpty()) {
             return back()->with('error', 'Deze vragenlijst bevat geen vragen.');
@@ -118,6 +127,7 @@ class PollController extends Controller
             }
             $anonLimitKey = 'anon-vote:' . $poll->id . ':' . sha1((string) $request->ip());
             if (RateLimiter::tooManyAttempts($anonLimitKey, 15)) {
+                \App\Support\Formulierrem::log('rem', (string) $request->ip());
                 return back()->withInput()->with('error', 'Vanaf deze internetaansluiting is de vragenlijst vandaag al vaak ingevuld. Probeert u het morgen nog eens.');
             }
             $respondentName = 'Anoniem';
@@ -220,6 +230,7 @@ class PollController extends Controller
             RateLimiter::hit($anonLimitKey, 86400);
         }
 
+        \App\Support\Formulierrem::geteld($poll);
         $this->piekMelding($poll);
 
         if (! $needsConfirm) {

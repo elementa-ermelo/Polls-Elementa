@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'logo',
         'is_admin',
+        'two_factor_enabled',
     ];
 
     /**
@@ -46,6 +47,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'two_factor_enabled' => 'boolean',
         ];
     }
 }

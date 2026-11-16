@@ -36,6 +36,15 @@
         </div>
 
         <div class="mb-6">
+            <label for="two_factor_enabled" class="flex items-center">
+                <input type="hidden" name="two_factor_enabled" value="0">
+                <input type="checkbox" id="two_factor_enabled" name="two_factor_enabled" value="1" {{ old('two_factor_enabled', $user->two_factor_enabled) ? 'checked' : '' }} class="mr-3">
+                <span class="text-gray-700 font-bold">Inlogcode per e-mail (2FA)</span>
+            </label>
+            <p style="font-size:12px; color:#6b7280; margin:4px 0 0;">Werkt alleen als het account een e-mailadres heeft.</p>
+        </div>
+
+        <div class="mb-6">
             <label class="block text-gray-700 font-bold mb-2">Logo</label>
             @if($user->logo)
                 <div class="mb-3">

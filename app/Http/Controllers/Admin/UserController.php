@@ -40,11 +40,14 @@ class UserController extends Controller
             'email' => 'required|string|max:255|unique:users', // e-mail of gebruikersnaam
             'password' => 'required|string|min:8|confirmed',
             'is_admin' => 'boolean',
+            'two_factor_enabled' => 'boolean',
             'logo' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_admin'] = $request->boolean('is_admin');
+        // Inlogcode per e-mail; zonder e-mailadres kan er geen code komen.
+        $validated['two_factor_enabled'] = $request->boolean('two_factor_enabled') && str_contains((string) $validated['email'], '@');
         $validated['organization_id'] = auth()->user()->organization_id;
 
         if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
@@ -81,10 +84,13 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)], // e-mail of gebruikersnaam
             'is_admin' => 'boolean',
+            'two_factor_enabled' => 'boolean',
             'logo' => 'nullable|image|mimes:jpeg,png,gif|max:2048',
         ]);
 
         $validated['is_admin'] = $request->boolean('is_admin');
+        // Inlogcode per e-mail; zonder e-mailadres kan er geen code komen.
+        $validated['two_factor_enabled'] = $request->boolean('two_factor_enabled') && str_contains((string) $validated['email'], '@');
 
         if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
             // Delete old logo if it exists

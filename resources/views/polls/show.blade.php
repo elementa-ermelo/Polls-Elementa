@@ -142,6 +142,9 @@
 
         <form method="post" action="{{ route('polls.vote', $poll) }}">
             @csrf
+            {{-- Spamrem: ondertekend openingsmoment en een lokveld dat mensen niet zien (Formulierrem) --}}
+            <input type="hidden" name="geopend" value="{{ \App\Support\Formulierrem::kaartje((string) request()->ip()) }}">
+            <div class="lokveld" aria-hidden="true"><label for="website">Laat dit veld leeg</label><input id="website" type="text" name="website" value="" tabindex="-1" autocomplete="off"></div>
 
             {{-- Persoonlijke gegevens (niet bij een anonieme vragenlijst) --}}
             @unless($poll->anonymous)
@@ -376,6 +379,7 @@
         .choice-grid--score[style*="--n: 11"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
     }
 
+    .lokveld { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
     .score-weetniet { margin-top: 8px; }
     .toelichting { margin-top: 10px; }
     .toelichting summary { cursor: pointer; font-size: 14px; color: var(--primary); }
@@ -426,7 +430,7 @@
     }
     </style>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
     (function () {
         var tekst = document.getElementById('voortgang-tekst');
         if (!tekst) return;
@@ -455,7 +459,7 @@
     })();
     </script>
 
-    <script>
+    <script nonce="{{ $cspNonce ?? '' }}">
     // Scroll to top when page loads if there's a success or error message
     document.addEventListener('DOMContentLoaded', () => {
         const flashElement = document.querySelector('.flash');
