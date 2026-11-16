@@ -198,7 +198,7 @@
                 @foreach($poll->questions as $index => $question)
                 @php($stopOptie = $question->stop_bij ? $question->options->firstWhere('label', $question->stop_bij) : null)
                 @php($overOptie = $question->overslaan_bij ? $question->options->firstWhere('label', $question->overslaan_bij) : null)
-                <div class="card vraagkaart" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
+                <div class="card vraagkaart" data-vraag="{{ $question->id }}" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
                         <div class="vraagnr" data-nr="{{ $index+1 }}" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
                         <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $question->question }}</h3>
@@ -281,9 +281,9 @@
                     @enderror
                 </div>
                 @if($stopOptie)
-                <div class="card stop-melding" id="stop-melding" hidden>
+                <div class="card stop-melding" data-voor="{{ $question->id }}" hidden>
                     <p style="margin:0 0 12px; font-size:15px; line-height:1.5;">U heeft "{{ $stopOptie->label }}" gekozen. De andere vragen zijn dan niet nodig; u kunt hieronder meteen versturen. Bedankt dat u toch even meedeed.</p>
-                    <button type="button" class="btn" id="toch-verder">Toch alle vragen invullen</button>
+                    <button type="button" class="btn toch-verder">Toch alle vragen invullen</button>
                 </div>
                 @endif
                 @endforeach
@@ -489,9 +489,10 @@
         var kaarten = Array.prototype.slice.call(form.querySelectorAll('.vraagkaart'));
         var tekst = document.getElementById('voortgang-tekst');
         var slinger = document.getElementById('slinger');
-        var melding = document.getElementById('stop-melding');
+        var meldingen = Array.prototype.slice.call(form.querySelectorAll('.stop-melding'));
         var logo = document.querySelector('.topnav-logo img');
-        var stopKaart = form.querySelector('.vraagkaart[data-stop-optie]');
+        // meer sprongvragen mogelijk (woonplaats-exit, "Nooit"); de eerste gekozen sprong telt
+        var stopKaarten = Array.prototype.slice.call(form.querySelectorAll('.vraagkaart[data-stop-optie]'));
         var toch = false, half = false, heel = false, eerste = true;
 
         function beantwoord(k) {
@@ -501,10 +502,14 @@
             });
             return ja;
         }
-        function stopActief() {
-            if (!stopKaart || toch) return false;
-            var o = document.getElementById(stopKaart.getAttribute('data-stop-optie'));
-            return !!(o && o.checked);
+        function actieveStop() {
+            if (toch) return null;
+            var gekozen = null;
+            stopKaarten.forEach(function (k) {
+                var o = document.getElementById(k.getAttribute('data-stop-optie'));
+                if (o && o.checked && (!gekozen || parseInt(k.getAttribute('data-pos'), 10) < parseInt(gekozen.getAttribute('data-pos'), 10))) gekozen = k;
+            });
+            return gekozen;
         }
         function klop() {
             if (!logo || rustig) return;
@@ -516,7 +521,8 @@
             for (var i = 0; i < n; i++) { var s = document.createElement('span'); s.className = 'lamp'; slinger.appendChild(s); }
         }
         function werkBij() {
-            var stop = stopActief();
+            var stopKaart = actieveStop();
+            var stop = !!stopKaart;
             var stopPos = stop ? parseInt(stopKaart.getAttribute('data-pos'), 10) : -1;
             kaarten.forEach(function (k, i) {
                 var weg = stop && parseInt(k.getAttribute('data-pos'), 10) > stopPos;
@@ -528,7 +534,7 @@
                 }
                 k.classList.toggle('overgeslagen', weg);
             });
-            if (melding) melding.hidden = !stop;
+            meldingen.forEach(function (m) { m.hidden = !(stop && m.getAttribute('data-voor') === stopKaart.getAttribute('data-vraag')); });
             var zichtbaar = kaarten.filter(function (k) { return !k.classList.contains('overgeslagen'); });
             var klaar = 0;
             zichtbaar.forEach(function (k, j) {
@@ -550,9 +556,13 @@
                 if (deel >= 1 && !heel) { heel = true; klop(); }
             } else { half = deel >= 0.5; heel = deel >= 1; eerste = false; }
         }
-        var tochKnop = document.getElementById('toch-verder');
-        if (tochKnop) tochKnop.addEventListener('click', function () { toch = true; werkBij(); if (melding) melding.scrollIntoView({ behavior: rustig ? 'auto' : 'smooth', block: 'start' }); });
-        form.addEventListener('change', function (e) { if (stopKaart && stopKaart.contains(e.target)) toch = false; werkBij(); });
+        form.querySelectorAll('.toch-verder').forEach(function (b) {
+            b.addEventListener('click', function () { toch = true; werkBij(); });
+        });
+        form.addEventListener('change', function (e) {
+            if (stopKaarten.some(function (k) { return k.contains(e.target); })) toch = false;
+            werkBij();
+        });
         form.addEventListener('input', werkBij);
         werkBij();
     })();
