@@ -220,7 +220,10 @@ function showTab(tab) {
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
                 <div style="width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">{{ $qi+1 }}</div>
                 <p style="margin:0; font-weight:600; font-size:15px;">{{ $question->question }}</p>
-                <span class="meta" style="margin-left:auto; font-size:13px; white-space:nowrap;">{{ $qTotal }} stem{{ $qTotal !== 1 ? 'men' : '' }}</span>
+                @php
+                    $nietGevraagd = \App\Support\PollType::isOpenTextType($question->type) ? 0 : max(0, ($gefilterdeRespondenten ?? $totalRespondents) - $question->votes->unique('email')->count());
+                @endphp
+                <span class="meta" style="margin-left:auto; font-size:13px; white-space:nowrap;">{{ $qTotal }} stem{{ $qTotal !== 1 ? 'men' : '' }}@if($nietGevraagd > 0) &middot; {{ $nietGevraagd }} niet gevraagd @endif</span>
             </div>
             @foreach($question->options as $option)
                 @php

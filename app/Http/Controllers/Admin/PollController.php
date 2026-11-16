@@ -583,6 +583,8 @@ HTML;
             // Bij geen antwoord: alleen bewaren als het een bestaande optie van deze vraag is.
             $standaard = trim((string) request()->input('standaard_antwoord', ''));
             $question->update(['standaard_antwoord' => $standaard !== '' && $question->options()->where('label', $standaard)->exists() ? $standaard : null]);
+            $stop = trim((string) request()->input('stop_bij', ''));
+            $question->update(['stop_bij' => $stop !== '' && $question->options()->where('label', $stop)->exists() ? $stop : null]);
 
             return redirect()->route('admin.polls.show', $poll)->with('success', 'Vraag toegevoegd.');
         });
@@ -649,6 +651,8 @@ HTML;
             // Bij geen antwoord: alleen bewaren als het een bestaande optie van deze vraag is.
             $standaard = trim((string) request()->input('standaard_antwoord', ''));
             $question->update(['standaard_antwoord' => $standaard !== '' && $question->options()->where('label', $standaard)->exists() ? $standaard : null]);
+            $stop = trim((string) request()->input('stop_bij', ''));
+            $question->update(['stop_bij' => $stop !== '' && $question->options()->where('label', $stop)->exists() ? $stop : null]);
 
             return redirect()->route('admin.polls.show', $poll)->with('success', 'Vraag bijgewerkt.');
         });

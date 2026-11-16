@@ -140,7 +140,7 @@
             </div>
         @endif
 
-        <form method="post" action="{{ route('polls.vote', $poll) }}">
+        <form method="post" action="{{ route('polls.vote', $poll) }}" data-vragenlijst>
             @csrf
             {{-- Spamrem: ondertekend openingsmoment en een lokveld dat mensen niet zien (Formulierrem) --}}
             <input type="hidden" name="geopend" value="{{ \App\Support\Formulierrem::kaartje((string) request()->ip()) }}">
@@ -186,18 +186,21 @@
                 @if($poll->questions->count() > 5)
                 <div class="voortgang" id="voortgang" aria-live="polite">
                     <span id="voortgang-tekst">0 van {{ $poll->questions->count() }} vragen beantwoord</span>
-                    <div class="voortgang-balk"><span id="voortgang-vul"></span></div>
+                    <div class="slinger" id="slinger" aria-hidden="true"></div>
                 </div>
                 @endif
 
                 @foreach($poll->questions as $index => $question)
-                <div class="card" style="margin-bottom:16px; padding:20px;">
+                @php($stopOptie = $question->stop_bij ? $question->options->firstWhere('label', $question->stop_bij) : null)
+                <div class="card vraagkaart" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-                        <div style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
+                        <div class="vraagnr" data-nr="{{ $index+1 }}" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
                         <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $question->question }}</h3>
                     </div>
                     @if($question->help_text)
                         <p style="margin:-8px 0 14px 38px; font-size:14px; color:var(--muted); line-height:1.5; white-space:pre-line;">{{ $question->help_text }}</p>
+                    @elseif($question->standaard_antwoord)
+                        <p style="margin:-8px 0 14px 38px; font-size:14px; color:var(--muted); line-height:1.5;">Niet verplicht. Geen antwoord telt als "{{ $question->standaard_antwoord }}".</p>
                     @endif
 
                     @if(\App\Support\PollType::isOpenTextType($question->type))
@@ -227,6 +230,8 @@
                         {{-- Gewone keuzes gelijkmatig over de regels: 7 antwoorden = 4 + 3, niet 6 + 1 (een los laatste antwoord werd over het hoofd gezien) --}}
                         @php($nOpt = $question->options->count())
                         @php($kol = $nOpt > 0 ? (int) ceil($nOpt / ceil($nOpt / 6)) : 1)
+                        @php($cMin = $isScore ? (int) $cijfers->min(fn ($o) => (int) $o->label) : 0)
+                        @php($cMax = $isScore ? (int) $cijfers->max(fn ($o) => (int) $o->label) : 1)
                         <div class="choice-grid{{ $isScore ? ' choice-grid--score' : ' choice-grid--kol' }}" style="{{ $isScore ? '--n: '.$cijfers->count().';' : '--kol: '.$kol.';' }}">
                             @if($question->options && $question->options->count() > 0)
                                 @foreach($isScore ? $cijfers : $question->options as $option)
@@ -235,7 +240,7 @@
                                         <input class="choice-inp" id="{{ $oid }}" type="radio"
                                             name="question_{{ $question->id }}" value="{{ $option->id }}"
                                             @checked((string) old('question_'.$question->id) === (string) $option->id)>
-                                        <label class="choice-lbl" for="{{ $oid }}">{{ $option->label }}</label>
+                                        <label class="choice-lbl" for="{{ $oid }}"@if($isScore) style="--kleur: hsl({{ $cMax > $cMin ? round(((int) $option->label - $cMin) / ($cMax - $cMin) * 120) : 120 }}, 62%, 42%);"@endif>{{ $option->label }}</label>
                                     </div>
                                 @endforeach
                             @else
@@ -269,6 +274,12 @@
                         <p class="vote-err" style="margin-top:10px;">Dit antwoord is verplicht.</p>
                     @enderror
                 </div>
+                @if($stopOptie)
+                <div class="card stop-melding" id="stop-melding" hidden>
+                    <p style="margin:0 0 12px; font-size:15px; line-height:1.5;">U heeft "{{ $stopOptie->label }}" gekozen. De andere vragen zijn dan niet nodig; u kunt hieronder meteen versturen. Bedankt dat u toch even meedeed.</p>
+                    <button type="button" class="btn" id="toch-verder">Toch alle vragen invullen</button>
+                </div>
+                @endif
                 @endforeach
 
                 {{-- Submit --}}
@@ -367,6 +378,9 @@
         justify-content: center;
     }
     .choice-grid--score .choice-lbl:hover { transform: none; }
+    /* Cijferkleuren: het gekozen cijfer kleurt van rood (laag) naar groen (hoog), met een veertje */
+    .choice-grid--score .choice-inp:checked + .choice-lbl { background: var(--kleur, var(--primary)); border-color: var(--kleur, var(--primary)); color: #fff; box-shadow: none; animation: veer .35s ease-out; }
+    @keyframes veer { 0% { transform: scale(.85); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
     .score-hint {
         display: flex;
         justify-content: space-between;
@@ -388,13 +402,43 @@
 
     /* Voortgang */
     .voortgang {
-        position: sticky; top: 0; z-index: 5;
+        position: sticky; top: 60px; z-index: 5; /* onder de vaste balk met het logo (60px) */
         margin: 0 0 16px; padding: 10px 14px;
         background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
         font-size: 14px; color: var(--muted);
     }
-    .voortgang-balk { margin-top: 6px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
-    .voortgang-balk span { display: block; height: 100%; width: 0; background: var(--primary); transition: width .2s; }
+    /* Slimme sprong */
+    .vraagkaart.overgeslagen { display: none; }
+    .stop-melding { margin-bottom: 16px; padding: 20px; background: #f0f9e8; border: 1px solid #c6e3a8; }
+
+    /* Lichtjesslinger als voortgang: elk beantwoorde vraag een lampje */
+    .slinger { display: flex; gap: 2px; align-items: flex-start; margin-top: 8px; padding-top: 3px; border-top: 1px solid #9ca3af; }
+    .slinger .lamp { flex: 1 1 0; max-width: 14px; aspect-ratio: 3 / 4; border-radius: 50% 50% 45% 45%; background: #d1d5db; position: relative; }
+    .slinger .lamp:nth-child(odd) { margin-top: 3px; }
+    .slinger .lamp::before { content: ''; position: absolute; top: -3px; left: 30%; width: 40%; height: 3px; background: #6b7280; border-radius: 1px; }
+    .slinger .lamp.aan:nth-child(4n+1) { background: #f5c400; box-shadow: 0 0 6px 2px rgba(245, 196, 0, .65); }
+    .slinger .lamp.aan:nth-child(4n+2) { background: #e5484d; box-shadow: 0 0 6px 2px rgba(229, 72, 77, .55); }
+    .slinger .lamp.aan:nth-child(4n+3) { background: #2f9e44; box-shadow: 0 0 6px 2px rgba(47, 158, 68, .55); }
+    .slinger .lamp.aan:nth-child(4n+4) { background: #3b82f6; box-shadow: 0 0 6px 2px rgba(59, 130, 246, .55); }
+    .slinger .lamp.aan { animation: aangaan .45s ease-out; }
+    @keyframes aangaan { 0% { transform: scale(.6); filter: brightness(2); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+    /* Vinkje in het nummerbolletje */
+    .vraagnr.klaar { background: #2f8f3a !important; animation: omdraaien .4s ease-out; }
+    @keyframes omdraaien { from { transform: rotateY(90deg); } to { transform: rotateY(0); } }
+
+    /* Kloppend hart (logo in de kop) */
+    .topnav-logo img.klop { animation: klop .9s ease-in-out; }
+    @keyframes klop { 0%, 100% { transform: scale(1); } 15% { transform: scale(1.15); } 30% { transform: scale(1); } 45% { transform: scale(1.1); } 60% { transform: scale(1); } }
+
+    /* Confetti bij het bedankje */
+    .confetti-laag { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 200; }
+    .confetti-laag i { position: absolute; top: -14px; width: 8px; height: 12px; border-radius: 2px; animation-name: val; animation-timing-function: cubic-bezier(.25, .6, .4, 1); animation-fill-mode: forwards; }
+    @keyframes val { to { transform: translate(var(--zij), 105vh) rotate(var(--draai)); } }
+
+    @media (prefers-reduced-motion: reduce) {
+        .slinger .lamp.aan, .vraagnr.klaar, .choice-grid--score .choice-inp:checked + .choice-lbl, .topnav-logo img.klop { animation: none; }
+    }
 
     /* Sterren */
     .star-wrap {
@@ -431,33 +475,98 @@
     </style>
 
     <script nonce="{{ $cspNonce ?? '' }}">
+    // Voortgang als lichtjesslinger, vinkje per beantwoorde vraag, slimme sprong en een kloppend hart.
     (function () {
+        var form = document.querySelector('form[data-vragenlijst]');
+        if (!form) return;
+        var rustig = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var kaarten = Array.prototype.slice.call(form.querySelectorAll('.vraagkaart'));
         var tekst = document.getElementById('voortgang-tekst');
-        if (!tekst) return;
-        var vul = document.getElementById('voortgang-vul');
-        var form = tekst.closest('form');
-        var namen = [];
-        form.querySelectorAll('[name^="question_"]').forEach(function (el) {
-            if (namen.indexOf(el.name) === -1) namen.push(el.name);
-        });
-        function tel() {
-            var klaar = 0;
-            namen.forEach(function (n) {
-                var els = form.querySelectorAll('[name="' + n + '"]');
-                var ja = false;
-                els.forEach(function (el) {
-                    if ((el.type === 'radio' && el.checked) || (el.tagName === 'TEXTAREA' && el.value.trim() !== '')) ja = true;
-                });
-                if (ja) klaar++;
+        var slinger = document.getElementById('slinger');
+        var melding = document.getElementById('stop-melding');
+        var logo = document.querySelector('.topnav-logo img');
+        var stopKaart = form.querySelector('.vraagkaart[data-stop-optie]');
+        var toch = false, half = false, heel = false, eerste = true;
+
+        function beantwoord(k) {
+            var ja = false;
+            k.querySelectorAll('[name^="question_"]').forEach(function (el) {
+                if ((el.type === 'radio' && el.checked) || (el.tagName === 'TEXTAREA' && el.value.trim() !== '')) ja = true;
             });
-            tekst.textContent = klaar + ' van ' + namen.length + ' vragen beantwoord';
-            vul.style.width = (namen.length ? Math.round(klaar / namen.length * 100) : 0) + '%';
+            return ja;
         }
-        form.addEventListener('change', tel);
-        form.addEventListener('input', tel);
-        tel();
+        function stopActief() {
+            if (!stopKaart || toch) return false;
+            var o = document.getElementById(stopKaart.getAttribute('data-stop-optie'));
+            return !!(o && o.checked);
+        }
+        function klop() {
+            if (!logo || rustig) return;
+            logo.classList.remove('klop'); void logo.offsetWidth; logo.classList.add('klop');
+        }
+        function bouwSlinger(n) {
+            if (!slinger || slinger.children.length === n) return;
+            slinger.innerHTML = '';
+            for (var i = 0; i < n; i++) { var s = document.createElement('span'); s.className = 'lamp'; slinger.appendChild(s); }
+        }
+        function werkBij() {
+            var stop = stopActief();
+            var stopPos = stop ? parseInt(stopKaart.getAttribute('data-pos'), 10) : -1;
+            kaarten.forEach(function (k) {
+                k.classList.toggle('overgeslagen', stop && parseInt(k.getAttribute('data-pos'), 10) > stopPos);
+            });
+            if (melding) melding.hidden = !stop;
+            var zichtbaar = kaarten.filter(function (k) { return !k.classList.contains('overgeslagen'); });
+            var klaar = 0;
+            zichtbaar.forEach(function (k) {
+                var ja = beantwoord(k);
+                if (ja) klaar++;
+                var nr = k.querySelector('.vraagnr');
+                if (nr && nr.classList.contains('klaar') !== ja) {
+                    nr.classList.toggle('klaar', ja);
+                    nr.textContent = ja ? '\u2713' : nr.getAttribute('data-nr');
+                }
+            });
+            if (tekst) tekst.textContent = klaar + ' van ' + zichtbaar.length + ' vragen beantwoord';
+            bouwSlinger(zichtbaar.length);
+            if (slinger) Array.prototype.forEach.call(slinger.children, function (l, i) { l.classList.toggle('aan', i < klaar); });
+            var deel = zichtbaar.length ? klaar / zichtbaar.length : 0;
+            if (!eerste) {
+                if (deel >= 0.5 && !half) { half = true; klop(); }
+                if (deel >= 1 && !heel) { heel = true; klop(); }
+            } else { half = deel >= 0.5; heel = deel >= 1; eerste = false; }
+        }
+        var tochKnop = document.getElementById('toch-verder');
+        if (tochKnop) tochKnop.addEventListener('click', function () { toch = true; werkBij(); if (melding) melding.scrollIntoView({ behavior: rustig ? 'auto' : 'smooth', block: 'start' }); });
+        form.addEventListener('change', function (e) { if (stopKaart && stopKaart.contains(e.target)) toch = false; werkBij(); });
+        form.addEventListener('input', werkBij);
+        werkBij();
     })();
     </script>
+
+    @if(session('success'))
+    <script nonce="{{ $cspNonce ?? '' }}">
+    // Confetti in het groen en geel van Centrum Ermelo bij het bedankje (niet bij "minder beweging").
+    (function () {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        var kleuren = ['#2f8f3a', '#8cc63f', '#c8d400', '#e6e000', '#ffffff'];
+        var laag = document.createElement('div'); laag.className = 'confetti-laag'; document.body.appendChild(laag);
+        for (var i = 0; i < 90; i++) {
+            var c = document.createElement('i');
+            c.style.left = (Math.random() * 100) + 'vw';
+            c.style.background = kleuren[i % kleuren.length];
+            c.style.animationDelay = (Math.random() * 0.8) + 's';
+            c.style.animationDuration = (2.4 + Math.random() * 1.6) + 's';
+            c.style.setProperty('--draai', (Math.random() * 720 - 360) + 'deg');
+            c.style.setProperty('--zij', (Math.random() * 80 - 40) + 'px');
+            laag.appendChild(c);
+        }
+        var logo = document.querySelector('.topnav-logo img');
+        if (logo) logo.classList.add('klop');
+        setTimeout(function () { laag.remove(); }, 5500);
+    })();
+    </script>
+    @endif
 
     <script nonce="{{ $cspNonce ?? '' }}">
     // Scroll to top when page loads if there's a success or error message

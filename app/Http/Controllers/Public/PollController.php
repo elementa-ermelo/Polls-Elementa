@@ -151,7 +151,8 @@ class PollController extends Controller
         }
 
         try {
-            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token, $needsConfirm): void {
+            $stopPos = \App\Support\Stopregel::positie($poll, $request->all());
+            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token, $needsConfirm, $stopPos): void {
                 $questions = $poll->questions()->get();
                 $isFirstQuestion = true;
 
@@ -164,6 +165,7 @@ class PollController extends Controller
                     ->update(['confirmation_token' => null, 'confirmation_sent_at' => null]);
 
                 foreach ($questions as $question) {
+                    $overgeslagen = $stopPos !== null && (int) $question->position > $stopPos;
                     $isOpenType = PollType::isOpenTextType((string) $question->type);
                     $option     = null;
                     $openAnswer = null;
@@ -174,7 +176,7 @@ class PollController extends Controller
                             $option = $question->options()->whereKey($optionId)->first();
                         }
                         // Leeg gelaten en de vraag heeft een standaardantwoord: dat telt.
-                        if (! $option && $question->standaard_antwoord) {
+                        if (! $option && $question->standaard_antwoord && ! $overgeslagen) {
                             $option = $question->options()->where('label', $question->standaard_antwoord)->first();
                         }
                         // Toelichting bij een cijfervraag (niet verplicht) in hetzelfde antwoordveld.
@@ -184,6 +186,11 @@ class PollController extends Controller
                         // Open vragen zijn niet verplicht: leeg opslaan als null, zodat het resultatenscherm het overslaat.
                         $openAnswer = trim($request->string("question_{$question->id}")->toString());
                         $openAnswer = $openAnswer === '' ? null : $openAnswer;
+                    }
+
+                    // Na een slimme sprong: wat niet is ingevuld, wordt ook niet opgeslagen.
+                    if ($overgeslagen && ! $option && $openAnswer === null) {
+                        continue;
                     }
 
                     // Only set confirmation token on first question (all votes share same token)

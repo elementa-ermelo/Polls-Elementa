@@ -46,6 +46,16 @@
         </select>
         <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Kies je een optie, dan mag de vraag leeg blijven en telt een leeg antwoord als die optie. Zet er in de toelichting bij wat er gebeurt.</p>
     </div>
+    <div class="field">
+        <label for="stop_bij">Slimme sprong <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+        <select id="stop_bij" name="stop_bij">
+            <option value="">Geen sprong</option>
+            @foreach($question->options as $o)
+                <option value="{{ $o->label }}" @selected(old('stop_bij', $question->stop_bij) === $o->label)>Bij "{{ $o->label }}" zijn de vragen hierna niet nodig</option>
+            @endforeach
+        </select>
+        <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">De invuller ziet de vragen hierna dichtklappen en kan meteen versturen, met een knop om toch alles in te vullen.</p>
+    </div>
     @endif
     <style>
         .switch-row { display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-weight:400; }

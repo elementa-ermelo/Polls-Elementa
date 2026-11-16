@@ -24,14 +24,17 @@ class StoreVoteRequest extends FormRequest
         ];
         
         // All polls use multi-question validation
+        // Slimme sprong: na het stopantwoord zijn de vragen niet verplicht.
+        $stopPos = \App\Support\Stopregel::positie($poll, $this->all());
         foreach ($poll->questions as $question) {
+            $overslaan = $stopPos !== null && (int) $question->position > $stopPos;
             if (PollType::isOpenTextType((string) $question->type)) {
                 $rules["question_{$question->id}"] = ['nullable', 'string', 'max:5000'];
             } else {
                 // De gekozen optie moet bij DEZE vraag horen, niet bij een willekeurige andere.
                 $rules["toelichting_{$question->id}"] = ['nullable', 'string', 'max:2000'];
                 $rules["question_{$question->id}"] = [
-                    $question->standaard_antwoord ? 'nullable' : 'required', 'integer',
+                    ($question->standaard_antwoord || $overslaan) ? 'nullable' : 'required', 'integer',
                     \Illuminate\Validation\Rule::exists('poll_options', 'id')->where('poll_question_id', $question->id),
                 ];
             }
