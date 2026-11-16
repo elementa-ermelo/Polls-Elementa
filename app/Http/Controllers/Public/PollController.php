@@ -163,6 +163,9 @@ class PollController extends Controller
                         if ($optionId) {
                             $option = $question->options()->whereKey($optionId)->first();
                         }
+                        // Toelichting bij een cijfervraag (niet verplicht) in hetzelfde antwoordveld.
+                        $toelichting = trim($request->string("toelichting_{$question->id}")->toString());
+                        $openAnswer = $toelichting === '' ? null : $toelichting;
                     } else {
                         // Open vragen zijn niet verplicht: leeg opslaan als null, zodat het resultatenscherm het overslaat.
                         $openAnswer = trim($request->string("question_{$question->id}")->toString());

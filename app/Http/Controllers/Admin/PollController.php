@@ -105,6 +105,7 @@ class PollController extends Controller
                     'access_code' => $accessCode,
                     'requires_confirmation' => $request->boolean('requires_confirmation'),
                     'anonymous' => $request->boolean('anonymous'),
+                    'organisatie_naam' => $request->filled('organisatie_naam') ? trim($request->input('organisatie_naam')) : null,
                     'user_id' => auth()->id(),
                 ]);
 
@@ -113,6 +114,8 @@ class PollController extends Controller
                     'title' => $poll->title,
                     'user_id' => auth()->id(),
                 ]);
+
+                $this->bewaarOrganisatieLogo($request, $poll);
 
                 // Process questions from JSON
                 $questionsJson = $request->input('questions_json', '{}');
@@ -375,6 +378,23 @@ HTML;
         ]);
     }
 
+    /** Logo op de vragenlijst zelf opslaan; het vorige logo van deze vragenlijst gaat weg. */
+    private function bewaarOrganisatieLogo(StorePollRequest $request, Poll $poll): void
+    {
+        if (! $request->hasFile('organisatie_logo') || ! $request->file('organisatie_logo')->isValid()) {
+            return;
+        }
+        $pad = $request->file('organisatie_logo')->store('logos', 'public');
+        if (! $pad) {
+            return;
+        }
+        $oud = $poll->organisatie_logo;
+        $poll->update(['organisatie_logo' => $pad]);
+        if ($oud && $oud !== $pad && \Illuminate\Support\Facades\Storage::disk('public')->exists($oud)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($oud);
+        }
+    }
+
     public function edit(Poll $poll): View
     {
         if (! $poll->isManagedBy(auth()->user())) {
@@ -431,7 +451,10 @@ HTML;
                 'access_code' => $accessCode,
                 'requires_confirmation' => $request->boolean('requires_confirmation'),
                     'anonymous' => $request->boolean('anonymous'),
+                    'organisatie_naam' => $request->filled('organisatie_naam') ? trim($request->input('organisatie_naam')) : null,
             ]);
+
+            $this->bewaarOrganisatieLogo($request, $poll);
 
             return redirect()->route('admin.polls.show', $poll)->with('success', 'Poll bijgewerkt.');
         });

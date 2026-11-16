@@ -237,6 +237,20 @@ function showTab(tab) {
                     </div>
                 </div>
             @endforeach
+            @php
+                $toel = \App\Support\PollType::isOpenTextType($question->type) ? collect() : $question->votes->whereNotNull('open_answer')->unique('email');
+            @endphp
+            @if($toel->isNotEmpty())
+                <details style="margin-top:10px;">
+                    <summary style="cursor:pointer; font-size:13px; color:var(--primary);">Toelichtingen ({{ $toel->count() }})</summary>
+                    @foreach($toel as $tv)
+                        <div style="margin-top:8px; padding:10px 12px; background:var(--bg); border-radius:6px; font-size:13px; line-height:1.5;">
+                            <strong>{{ $tv->option?->label ?? '-' }}</strong> &middot; {{ $tv->open_answer }}
+                            <span style="color:var(--muted); font-size:11px;"> &middot; {{ $tv->created_at->format('d-m H:i') }}</span>
+                        </div>
+                    @endforeach
+                </details>
+            @endif
         </div>
     @endforeach
 

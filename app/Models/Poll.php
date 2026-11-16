@@ -25,6 +25,8 @@ class Poll extends Model
         'access_code',
         'requires_confirmation',
         'anonymous',
+        'organisatie_naam',
+        'organisatie_logo',
         'user_id',
     ];
 

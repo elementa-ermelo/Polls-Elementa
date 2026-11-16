@@ -43,7 +43,7 @@
             @endif
         </p>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
-            <strong>2. De vragen.</strong> Wij zijn heel benieuwd naar wat u vindt, wilt u alle vragen beantwoorden?
+            <strong>2. De vragen.</strong> Wij zijn heel benieuwd naar wat u vindt, wilt u alle vragen beantwoorden? Het zijn er veel maar we hebben het met cijfers zo makkelijk mogelijk proberen te maken.
         </p>
         @if($poll->requires_confirmation && ! $poll->anonymous)
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
@@ -69,19 +69,21 @@
                     <p style="margin:0; color:var(--muted); font-size:15px;">{{ $poll->question }}</p>
                 @endif
             </div>
-            @if($poll->user)
-                <div style="display:flex; align-items:center; gap:16px; flex-shrink:0; padding:12px; background:rgba(59, 130, 246, 0.05); border-radius:12px; min-width:240px;">
-                    @if($poll->user->logo)
-                        <img src="{{ asset('storage/' . $poll->user->logo) }}" alt="{{ $poll->user->name }}"
-                            style="height:100px; width:100px; border-radius:50%; object-fit:cover; border:3px solid var(--primary); box-shadow:0 4px 12px rgba(59, 130, 246, 0.2);">
+            @php($orgNaam = $poll->organisatie_naam ?: $poll->user?->name)
+            @php($orgLogo = $poll->organisatie_logo ?: $poll->user?->logo)
+            @if($orgNaam)
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; flex-shrink:0; padding:12px; background:rgba(59, 130, 246, 0.05); border-radius:12px; max-width:100%;">
+                    @if($orgLogo)
+                        <img src="{{ asset('storage/' . $orgLogo) }}" alt="{{ $orgNaam }}"
+                            style="height:90px; width:auto; max-width:min(240px, 100%); object-fit:contain; border-radius:12px; background:#fff; padding:6px;">
                     @else
                         <div style="height:100px; width:100px; border-radius:50%; background:var(--accent-soft); display:flex; align-items:center; justify-content:center; border:3px solid var(--primary); box-shadow:0 4px 12px rgba(59, 130, 246, 0.2);">
-                            <span style="font-size:44px; color:var(--accent); font-weight:700;">{{ substr($poll->user->name,0,1) }}</span>
+                            <span style="font-size:44px; color:var(--accent); font-weight:700;">{{ mb_substr($orgNaam, 0, 1) }}</span>
                         </div>
                     @endif
                     <div>
                         <p style="margin:0 0 4px; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">Organisatie</p>
-                        <p style="margin:0; font-weight:700; font-size:16px; color:var(--primary);">{{ $poll->user->name }}</p>
+                        <p style="margin:0; font-weight:700; font-size:16px; color:var(--primary);">{{ $orgNaam }}</p>
                         @if($poll->user->email)
                                 
                         @endif
@@ -247,6 +249,11 @@
                                     <label class="choice-lbl" for="{{ $oid }}">{{ $option->label }}</label>
                                 </div>
                             @endforeach
+                            @php($tk = 'toelichting_'.$question->id)
+                            <details class="toelichting" @if(old($tk)) open @endif>
+                                <summary>Wilt u dit toelichten?</summary>
+                                <textarea name="{{ $tk }}" rows="3" maxlength="2000" placeholder="Niet verplicht">{{ old($tk) }}</textarea>
+                            </details>
                         @endif
                     @endif
 
@@ -361,6 +368,9 @@
     }
 
     .score-weetniet { margin-top: 8px; }
+    .toelichting { margin-top: 10px; }
+    .toelichting summary { cursor: pointer; font-size: 14px; color: var(--primary); }
+    .toelichting textarea { margin-top: 8px; width: 100%; resize: vertical; }
     .score-weetniet .choice-lbl { padding: 8px 16px; font-size: 14px; font-weight: 500; color: var(--muted); }
 
     /* Voortgang */

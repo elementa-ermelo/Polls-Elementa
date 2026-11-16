@@ -26,6 +26,8 @@ class StorePollRequest extends FormRequest
             'access_code' => ['nullable', 'string', 'min:6', 'max:50'],
             'requires_confirmation' => ['nullable', 'boolean'],
             'anonymous' => ['nullable', 'boolean'],
+            'organisatie_naam' => ['nullable', 'string', 'max:255'],
+            'organisatie_logo' => ['nullable', 'image', 'mimes:jpeg,png,gif,webp', 'max:2048'],
         ];
     }
 

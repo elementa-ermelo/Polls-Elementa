@@ -9,7 +9,7 @@
     <a class="btn" href="{{ route('admin.polls.index') }}">← Terug</a>
 </div>
 
-<form method="post" action="{{ $action }}">
+<form method="post" action="{{ $action }}" enctype="multipart/form-data">
     @csrf
     @if($method !== 'POST') @method($method) @endif
 
@@ -71,6 +71,21 @@
                     <span style="font-size:12px; color:var(--muted);">Aan: deelnemers krijgen een mail met een link en tellen pas mee als ze daarop klikken (tegen nep-inzendingen, maar een deel klikt nooit). Uit: antwoorden tellen direct mee.</span>
                 </span>
             </label>
+        </div>
+
+        <div class="field">
+            <label for="organisatie_naam">Organisatie op de vragenlijst <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+            <input id="organisatie_naam" type="text" name="organisatie_naam" value="{{ old('organisatie_naam', $poll->organisatie_naam ?? '') }}" placeholder="Leeg = {{ auth()->user()->name }}">
+            @error('organisatie_naam')<p class="field-error">{{ $message }}</p>@enderror
+        </div>
+        <div class="field">
+            <label for="organisatie_logo">Logo op de vragenlijst <span style="font-weight:400; color:var(--muted);">(optioneel, png/jpg/webp, max 2 MB)</span></label>
+            @if($poll->exists && $poll->organisatie_logo)
+                <img src="{{ asset('storage/' . $poll->organisatie_logo) }}" alt="" style="display:block; height:60px; width:auto; max-width:220px; object-fit:contain; margin:0 0 8px;">
+            @endif
+            <input id="organisatie_logo" type="file" name="organisatie_logo" accept="image/png,image/jpeg,image/gif,image/webp">
+            <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Leeg laten = het logo van de eigenaar.</p>
+            @error('organisatie_logo')<p class="field-error">{{ $message }}</p>@enderror
         </div>
 
         @php
