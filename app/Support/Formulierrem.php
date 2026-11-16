@@ -20,8 +20,8 @@ use Illuminate\Support\Facades\RateLimiter;
  */
 class Formulierrem
 {
-    /** Inzendingen per uur over alle bezoekers samen; daarboven stil weg (en een mail via check-formulieren). */
-    public const PLAFOND_PER_UUR = 120;
+    /** Inzendingen per uur over alle bezoekers samen; daarboven stil weg (en een mail via check-formulieren). Bewust hoog (16 nov 2026, IJme): bij de start van een vragenlijst is 120+ per uur echt; alleen een bot met heel veel adressen haalt 1000. Een golf zie je via de piekmelding (25/uur) en de herkomst. */
+    public const PLAFOND_PER_UUR = 1000;
 
     /** Minimale tijd tussen openen en versturen, en hoe lang een geopende pagina geldig blijft. */
     private const MIN_SECONDEN = 3;
