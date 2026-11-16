@@ -71,7 +71,7 @@
             </div>
             @php($orgNaam = $poll->organisatie_naam ?: $poll->user?->name)
             @php($orgLogo = $poll->organisatie_logo ?: $poll->user?->logo)
-            @if($orgNaam)
+            @if($orgNaam && ! $poll->organisatie_logo)
                 <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; flex-shrink:0; padding:12px; background:rgba(59, 130, 246, 0.05); border-radius:12px; max-width:100%;">
                     @if($orgLogo)
                         <img src="{{ asset('storage/' . $orgLogo) }}" alt="{{ $orgNaam }}"

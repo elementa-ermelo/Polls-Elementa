@@ -4,7 +4,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Polls Elementa' }}</title>
+    @php
+        // Op de pagina van een vragenlijst met een eigen logo: dat logo in de kop, en de titel in het tabblad.
+        $kopPoll = (isset($poll) && $poll instanceof \App\Models\Poll && request()->routeIs('polls.show') && $poll->organisatie_logo) ? $poll : null;
+    @endphp
+    <title>{{ $title ?? ($kopPoll ? $kopPoll->title . ' · ' . ($kopPoll->organisatie_naam ?: 'Polls') : 'Polls Elementa') }}</title>
     <style>
         :root {
             --bg: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 100%);
@@ -61,6 +65,8 @@
             flex-shrink: 0;
             letter-spacing: -0.5px;
         }
+        .topnav-logo { display: flex; align-items: center; height: 100%; margin-right: 16px; flex-shrink: 0; }
+        .topnav-logo img { height: 42px; width: auto; max-width: 180px; object-fit: contain; display: block; }
         .topnav a.nav-link {
             color: var(--muted);
             text-decoration: none;
@@ -309,9 +315,15 @@
 <body>
 
 <nav class="topnav">
+    @if($kopPoll)
+    <a href="{{ route('polls.show', $kopPoll) }}" class="topnav-logo">
+        <img src="{{ asset('storage/' . $kopPoll->organisatie_logo) }}" alt="{{ $kopPoll->organisatie_naam ?: $kopPoll->title }}">
+    </a>
+    @else
     <a href="{{ auth()->check() ? route('admin.polls.index') : route('polls.index') }}" class="topnav-brand">
         Polls Elementa
     </a>
+    @endif
 
     @auth
         <a href="{{ route('admin.polls.index') }}" class="nav-link">Polls</a>
