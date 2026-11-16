@@ -585,6 +585,8 @@ HTML;
             $question->update(['standaard_antwoord' => $standaard !== '' && $question->options()->where('label', $standaard)->exists() ? $standaard : null]);
             $stop = trim((string) request()->input('stop_bij', ''));
             $question->update(['stop_bij' => $stop !== '' && $question->options()->where('label', $stop)->exists() ? $stop : null]);
+            $over = trim((string) request()->input('overslaan_bij', ''));
+            $question->update(['overslaan_bij' => $over !== '' && $question->options()->where('label', $over)->exists() ? $over : null]);
 
             return redirect()->route('admin.polls.show', $poll)->with('success', 'Vraag toegevoegd.');
         });
@@ -653,6 +655,8 @@ HTML;
             $question->update(['standaard_antwoord' => $standaard !== '' && $question->options()->where('label', $standaard)->exists() ? $standaard : null]);
             $stop = trim((string) request()->input('stop_bij', ''));
             $question->update(['stop_bij' => $stop !== '' && $question->options()->where('label', $stop)->exists() ? $stop : null]);
+            $over = trim((string) request()->input('overslaan_bij', ''));
+            $question->update(['overslaan_bij' => $over !== '' && $question->options()->where('label', $over)->exists() ? $over : null]);
 
             return redirect()->route('admin.polls.show', $poll)->with('success', 'Vraag bijgewerkt.');
         });

@@ -56,6 +56,16 @@
         </select>
         <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">De invuller ziet de vragen hierna dichtklappen en kan meteen versturen, met een knop om toch alles in te vullen.</p>
     </div>
+    <div class="field">
+        <label for="overslaan_bij">Volgende vraag overslaan <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+        <select id="overslaan_bij" name="overslaan_bij">
+            <option value="">Nooit overslaan</option>
+            @foreach($question->options as $o)
+                <option value="{{ $o->label }}" @selected(old('overslaan_bij', $question->overslaan_bij) === $o->label)>Bij "{{ $o->label }}" valt de volgende vraag weg</option>
+            @endforeach
+        </select>
+        <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Alleen de vraag direct hierna verdwijnt; die telt in de uitslag als "niet gevraagd".</p>
+    </div>
     @endif
     <style>
         .switch-row { display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-weight:400; }

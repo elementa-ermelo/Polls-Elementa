@@ -192,7 +192,8 @@
 
                 @foreach($poll->questions as $index => $question)
                 @php($stopOptie = $question->stop_bij ? $question->options->firstWhere('label', $question->stop_bij) : null)
-                <div class="card vraagkaart" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
+                @php($overOptie = $question->overslaan_bij ? $question->options->firstWhere('label', $question->overslaan_bij) : null)
+                <div class="card vraagkaart" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
                         <div class="vraagnr" data-nr="{{ $index+1 }}" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
                         <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $question->question }}</h3>
@@ -512,20 +513,28 @@
         function werkBij() {
             var stop = stopActief();
             var stopPos = stop ? parseInt(stopKaart.getAttribute('data-pos'), 10) : -1;
-            kaarten.forEach(function (k) {
-                k.classList.toggle('overgeslagen', stop && parseInt(k.getAttribute('data-pos'), 10) > stopPos);
+            kaarten.forEach(function (k, i) {
+                var weg = stop && parseInt(k.getAttribute('data-pos'), 10) > stopPos;
+                // sprong over één vraag: de vorige vraag heeft een overslaan-antwoord dat gekozen is
+                var vorige = kaarten[i - 1];
+                if (!weg && vorige && vorige.hasAttribute('data-sla-over')) {
+                    var o = document.getElementById(vorige.getAttribute('data-sla-over'));
+                    weg = !!(o && o.checked);
+                }
+                k.classList.toggle('overgeslagen', weg);
             });
             if (melding) melding.hidden = !stop;
             var zichtbaar = kaarten.filter(function (k) { return !k.classList.contains('overgeslagen'); });
             var klaar = 0;
-            zichtbaar.forEach(function (k) {
+            zichtbaar.forEach(function (k, j) {
                 var ja = beantwoord(k);
                 if (ja) klaar++;
                 var nr = k.querySelector('.vraagnr');
-                if (nr && nr.classList.contains('klaar') !== ja) {
-                    nr.classList.toggle('klaar', ja);
-                    nr.textContent = ja ? '\u2713' : nr.getAttribute('data-nr');
-                }
+                if (!nr) return;
+                // doorlopend nummeren over de zichtbare vragen (na een sprong geen gat in de nummers)
+                nr.setAttribute('data-nr', String(j + 1));
+                if (nr.classList.contains('klaar') !== ja) nr.classList.toggle('klaar', ja);
+                nr.textContent = ja ? '\u2713' : String(j + 1);
             });
             if (tekst) tekst.textContent = klaar + ' van ' + zichtbaar.length + ' vragen beantwoord';
             bouwSlinger(zichtbaar.length);

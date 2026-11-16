@@ -18,6 +18,7 @@ class PollQuestion extends Model
         'met_toelichting',
         'standaard_antwoord',
         'stop_bij',
+        'overslaan_bij',
         'type',
         'position',
     ];

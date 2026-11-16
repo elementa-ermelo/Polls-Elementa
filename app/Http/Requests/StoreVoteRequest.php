@@ -25,9 +25,9 @@ class StoreVoteRequest extends FormRequest
         
         // All polls use multi-question validation
         // Slimme sprong: na het stopantwoord zijn de vragen niet verplicht.
-        $stopPos = \App\Support\Stopregel::positie($poll, $this->all());
+        $wegIds = \App\Support\Stopregel::overgeslagen($poll, $this->all());
         foreach ($poll->questions as $question) {
-            $overslaan = $stopPos !== null && (int) $question->position > $stopPos;
+            $overslaan = in_array($question->id, $wegIds, true);
             if (PollType::isOpenTextType((string) $question->type)) {
                 $rules["question_{$question->id}"] = ['nullable', 'string', 'max:5000'];
             } else {

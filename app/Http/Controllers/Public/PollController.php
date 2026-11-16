@@ -151,8 +151,8 @@ class PollController extends Controller
         }
 
         try {
-            $stopPos = \App\Support\Stopregel::positie($poll, $request->all());
-            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token, $needsConfirm, $stopPos): void {
+            $wegIds = \App\Support\Stopregel::overgeslagen($poll, $request->all());
+            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token, $needsConfirm, $wegIds): void {
                 $questions = $poll->questions()->get();
                 $isFirstQuestion = true;
 
@@ -165,7 +165,7 @@ class PollController extends Controller
                     ->update(['confirmation_token' => null, 'confirmation_sent_at' => null]);
 
                 foreach ($questions as $question) {
-                    $overgeslagen = $stopPos !== null && (int) $question->position > $stopPos;
+                    $overgeslagen = in_array($question->id, $wegIds, true);
                     $isOpenType = PollType::isOpenTextType((string) $question->type);
                     $option     = null;
                     $openAnswer = null;
