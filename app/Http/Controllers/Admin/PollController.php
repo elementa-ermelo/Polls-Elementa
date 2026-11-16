@@ -573,6 +573,7 @@ HTML;
             $question = $poll->questions()->create([
                 'question' => $data['question'],
                 'help_text' => $data['help_text'] ?? null,
+                'met_toelichting' => request()->boolean('met_toelichting'),
                 'type' => $data['type'],
                 'position' => $position + 1,
             ]);
@@ -636,6 +637,7 @@ HTML;
             $question->update([
                 'question' => $data['question'],
                 'help_text' => $data['help_text'] ?? null,
+                'met_toelichting' => request()->boolean('met_toelichting'),
                 'type' => $data['type'],
             ]);
 

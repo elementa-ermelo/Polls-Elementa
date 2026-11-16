@@ -24,6 +24,27 @@
         @error('help_text')<p class="field-error">{{ $message }}</p>@enderror
     </div>
 
+    <div class="field">
+        <input type="hidden" name="met_toelichting" value="0">
+        <label class="switch-row" for="met_toelichting">
+            <input type="checkbox" id="met_toelichting" name="met_toelichting" value="1" class="switch-input" @checked((bool) old('met_toelichting', $question->met_toelichting ?? false))>
+            <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+            <span>
+                <strong>Toelichtingsveld tonen</strong><br>
+                <span style="font-size:12px; color:var(--muted);">Aan: onder de antwoorden staat een ingeklapt, niet verplicht veld "Wilt u dit toelichten?". De toelichtingen staan in de uitslag bij de vraag.</span>
+            </span>
+        </label>
+    </div>
+    <style>
+        .switch-row { display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-weight:400; }
+        .switch-input { position:absolute; opacity:0; width:1px; height:1px; }
+        .switch-track { flex-shrink:0; width:44px; height:24px; border-radius:12px; background:#cbd5e1; position:relative; transition:background .2s; margin-top:2px; }
+        .switch-knob { position:absolute; top:3px; left:3px; width:18px; height:18px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
+        .switch-input:checked + .switch-track { background:var(--primary); }
+        .switch-input:checked + .switch-track .switch-knob { left:23px; }
+        .switch-input:focus-visible + .switch-track { outline:2px solid var(--primary); outline-offset:2px; }
+    </style>
+
     @if($question->exists && ($answerCount = $question->votes()->count()) > 0)
         <div style="padding:12px 14px; background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; margin-bottom:16px; font-size:14px; color:#9a3412;">
             Op deze vraag zijn al {{ $answerCount }} antwoorden gegeven. Tekst aanpassen en opties hernoemen kan zonder dat er iets verloren gaat;

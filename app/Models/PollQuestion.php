@@ -15,9 +15,15 @@ class PollQuestion extends Model
         'poll_id',
         'question',
         'help_text',
+        'met_toelichting',
         'type',
         'position',
     ];
+
+    protected function casts(): array
+    {
+        return ['met_toelichting' => 'boolean'];
+    }
 
     public function poll(): BelongsTo
     {

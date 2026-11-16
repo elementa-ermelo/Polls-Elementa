@@ -249,6 +249,8 @@
                                     <label class="choice-lbl" for="{{ $oid }}">{{ $option->label }}</label>
                                 </div>
                             @endforeach
+                        @endif
+                        @if($question->met_toelichting)
                             @php($tk = 'toelichting_'.$question->id)
                             <details class="toelichting" @if(old($tk)) open @endif>
                                 <summary>Wilt u dit toelichten?</summary>
