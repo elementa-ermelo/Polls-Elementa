@@ -5,7 +5,7 @@
     {{-- Poll switcher --}}
     @if($allPolls->count() > 1)
     <div style="margin-bottom: 28px;">
-        <p style="margin: 0 0 12px; font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Beschikbare Polls</p>
+        <p style="margin: 0 0 12px; font-size: 12px; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Open vragenlijsten</p>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
             @foreach($allPolls as $p)
                 <a href="{{ route('polls.show', $p) }}"
@@ -24,35 +24,35 @@
 
     {{-- Introductie --}}
     <div class="card" style="margin-bottom:24px; padding:24px; background:linear-gradient(135deg, var(--accent) 0%, #a7d8de 100%); color:#fff; border:none;">
-        <h2 style="margin:0 0 12px; font-size:18px; font-weight:700; color:#fff;">❓ Welkom bij deze poll</h2>
+        <h2 style="margin:0 0 12px; font-size:18px; font-weight:700; color:#fff;">Welkom bij deze vragenlijst</h2>
         <p style="margin:0 0 8px; line-height:1.6; font-size:15px; color:#fff;">
-            We willen graag jouw eerlijke mening horen. Door deze vragen in te vullen, help je ons inzichten te verzamelen.
+            Wij horen graag wat u ervan vindt. Het invullen kost een paar minuten.
         </p>
     </div>
 
     {{-- Info over het proces --}}
     <div class="card" style="margin-bottom:16px; padding:20px; background:#dbeafe; border:1px solid #bfdbfe;">
         <h3 style="margin:0 0 12px; color:var(--primary); display:flex; align-items:center; gap:8px;">
-            <span>💡</span> Hoe werkt het indienen?
+            Zo werkt het
         </h3>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
-            <strong>1. Vul je gegevens in</strong> — We vragen je naam en e-mailadres; telefoonnummer en leeftijd zijn optioneel.
+            <strong>1. Uw gegevens.</strong> Wij vragen uw naam en e-mailadres. Uw telefoonnummer is niet verplicht.
         </p>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
-            <strong>2. Beantwoord de vragen</strong> — Geef je eerlijke mening.
+            <strong>2. De vragen.</strong> Wij zijn heel benieuwd naar wat u vindt, wilt u alle vragen beantwoorden?
         </p>
         @if($poll->requires_confirmation)
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
-            <strong>3. Verstuur en bevestig</strong> — Na verzending krijg je direct een e-mail met een bevestigingslink.
-            Klik erop binnen 7 dagen en je antwoorden tellen mee! 📧
+            <strong>3. Versturen en bevestigen.</strong> Na het versturen krijgt u een e-mail met een link.
+            Klikt u binnen zeven dagen op die link, dan tellen uw antwoorden mee.
         </p>
         @else
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
-            <strong>3. Verstuur</strong> — Je antwoorden tellen direct mee.
+            <strong>3. Versturen.</strong> Uw antwoorden tellen direct mee.
         </p>
         @endif
         <p style="margin:0; color:#1e40af; font-size:13px; opacity:0.9; font-style:italic;">
-            ✨ Jouw mening is waardevol — bedankt dat je meedoet!
+            Bedankt voor uw medewerking.
         </p>
     </div>
 
@@ -95,8 +95,8 @@
     @if($needsAccessCode)
         {{-- Access Code Form --}}
         <div class="card" style="margin-bottom:16px; padding:20px; background:#fef3c7; border:2px solid #fbbf24;">
-            <h2 style="margin:0 0 12px; font-size:16px; color:#92400e; font-weight:600;">🔐 Toegangscode vereist</h2>
-            <p style="margin:0 0 16px; color:#b45309; font-size:14px;">Deze poll is beveiligd. Voer de toegangscode in om deel te nemen.</p>
+            <h2 style="margin:0 0 12px; font-size:16px; color:#92400e; font-weight:600;">Toegangscode</h2>
+            <p style="margin:0 0 16px; color:#b45309; font-size:14px;">Voor deze vragenlijst heeft u een toegangscode nodig. Vul de code in om te beginnen.</p>
             
             @if($errors->has('error'))
                 <div style="padding:12px; background:#fee2e2; border:1px solid #fecaca; border-radius:8px; margin-bottom:12px; color:#991b1b; font-size:14px;">
@@ -106,10 +106,10 @@
 
             <form method="post" action="{{ route('polls.verify-access-code', $poll) }}" style="display:flex; gap:8px;">
                 @csrf
-                <input type="text" name="access_code" placeholder="Voer code in..." 
+                <input type="text" name="access_code" placeholder="Code" 
                     style="flex:1; padding:10px 12px; border:1px solid #fbbf24; border-radius:6px; font-size:14px; text-transform:uppercase;"
                     required autofocus>
-                <button type="submit" class="btn btn-primary" style="padding:10px 20px; white-space:nowrap;">Verifiëren</button>
+                <button type="submit" class="btn btn-primary" style="padding:10px 20px; white-space:nowrap;">Verder</button>
             </form>
         </div>
     @elseif($poll->isOpen())
@@ -194,8 +194,8 @@
                         </div>
 
                     @else
-                        @php($isScore = $question->type === \App\Support\PollType::SCORE_1_10)
-                        <div class="choice-grid{{ $isScore ? ' choice-grid--score' : '' }}">
+                        @php($isScore = $question->options->isNotEmpty() && $question->options->every(fn ($o) => ctype_digit((string) $o->label)))
+                        <div class="choice-grid{{ $isScore ? ' choice-grid--score' : '' }}"@if($isScore) style="--n: {{ $question->options->count() }};"@endif>
                             @if($question->options && $question->options->count() > 0)
                                 @foreach($question->options as $option)
                                     @php($oid = 'q'.$question->id.'_o'.$option->id)
@@ -210,7 +210,7 @@
                                 <p style="color:var(--muted); font-size:14px;">Geen antwoordopties beschikbaar.</p>
                             @endif
                         </div>
-                        @if($isScore)
+                        @if($question->type === \App\Support\PollType::SCORE_1_10)
                             <div class="score-hint"><span>1 = heel slecht</span><span>10 = uitstekend</span></div>
                         @endif
                     @endif
@@ -225,20 +225,20 @@
                 <div class="card" style="padding:20px; text-align:center;">
                     <p style="margin:0 0 14px; color:var(--muted); font-size:14px;">
                         @if($poll->requires_confirmation)
-                            Na het versturen ontvangt u een bevestigingsmail om uw antwoorden te bevestigen.
+                            Na het versturen ontvangt u een e-mail. Klik op de link in die mail om uw antwoorden te bevestigen.
                         @else
                             U kunt de lijst één keer per e-mailadres invullen.
                         @endif
                     </p>
                     <button type="submit" class="btn btn-primary"
                             style="padding:12px 40px; font-size:16px; border-radius:10px; width:100%; max-width:360px;">
-                        Verstuur mijn antwoorden →
+                        Antwoorden versturen
                     </button>
                 </div>
             @else
                 <div class="card" style="padding:24px; text-align:center;">
                     <p style="font-size:32px; margin:0 0 8px;">⚠️</p>
-                    <p style="margin:0; font-size:16px;">Deze poll bevat nog geen vragen.</p>
+                    <p style="margin:0; font-size:16px;">Deze vragenlijst bevat nog geen vragen.</p>
                 </div>
             @endif
         </form>
@@ -246,13 +246,13 @@
     @elseif($poll->opens_at && now()->lt($poll->opens_at))
         <div class="card" style="padding:24px; text-align:center;">
             <p style="font-size:32px; margin:0 0 8px;">📅</p>
-            <p style="margin:0; font-size:16px;">Deze poll is nog niet open.<br>
+            <p style="margin:0; font-size:16px;">Deze vragenlijst is nog niet open.<br>
             <strong>Start op {{ $poll->opens_at->format('d-m-Y \o\m H:i') }}</strong></p>
         </div>
     @else
         <div class="card" style="padding:24px; text-align:center;">
             <p style="font-size:32px; margin:0 0 8px;">🔒</p>
-            <p style="margin:0; font-size:16px;">Deze poll is gesloten. Bedankt voor uw interesse.</p>
+            <p style="margin:0; font-size:16px;">Deze vragenlijst is gesloten.</p>
         </div>
     @endif
 
@@ -299,7 +299,7 @@
 
     /* Cijfers 1-10: één rij op breed scherm, twee rijen van vijf op de telefoon */
     .choice-grid--score {
-        grid-template-columns: repeat(10, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--n, 10), minmax(0, 1fr));
         gap: 6px;
     }
     .choice-grid--score .choice-lbl {
@@ -320,6 +320,7 @@
     }
     @media (max-width: 520px) {
         .choice-grid--score { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+        .choice-grid--score[style*="--n: 11"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
     }
 
     /* Sterren */

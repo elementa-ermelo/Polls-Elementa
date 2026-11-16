@@ -5,10 +5,10 @@
 {{-- Hero Section --}}
 <div style="margin-bottom: 48px; padding: 40px 24px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%); border-radius: 16px; color: white;">
     <h1 style="margin: 0 0 12px; font-size: 32px; font-weight: 700;">📊 Welkom bij Polls Elementa</h1>
-    <p style="margin: 0 0 6px; font-size: 18px; opacity: 0.95;">Jouw mening telt!</p>
+    <p style="margin: 0 0 6px; font-size: 18px; opacity: 0.95;">Hier vindt u de vragenlijsten die openstaan.</p>
     <p style="margin: 0; opacity: 0.85; line-height: 1.6; max-width: 600px;">
-        Vul onze polls in en help ons beter te begrijpen wat jij denkt. Jouw antwoorden helpen organisaties 
-        betere beslissingen te nemen op basis van echte meningen van mensen zoals jij.
+        Organisaties gebruiken deze site om inwoners en klanten vragen te stellen. Uw antwoorden gaan naar de
+        organisatie die de vragenlijst heeft opgesteld.
     </p>
 </div>
 
@@ -18,64 +18,63 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
         <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
             <div style="font-size: 32px; margin-bottom: 12px;">1️⃣</div>
-            <h3 style="margin: 0 0 8px; font-size: 16px;">Kies een poll</h3>
+            <h3 style="margin: 0 0 8px; font-size: 16px;">Kies een vragenlijst</h3>
             <p style="margin: 0; color: var(--muted); font-size: 14px;">
-                Selecteer een poll die je interesseert en klik op "Invullen".
+                Klik bij de vragenlijst op 'Invullen'.
             </p>
         </div>
         <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
             <div style="font-size: 32px; margin-bottom: 12px;">2️⃣</div>
-            <h3 style="margin: 0 0 8px; font-size: 16px;">Vul je gegevens in</h3>
+            <h3 style="margin: 0 0 8px; font-size: 16px;">Uw gegevens</h3>
             <p style="margin: 0; color: var(--muted); font-size: 14px;">
-                Voer je naam, e-mailadres en leeftijd in. Dit wordt gebruikt voor statistieken.
+                U vult uw naam en e-mailadres in. Telefoonnummer en leeftijd zijn niet verplicht.
             </p>
         </div>
         <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
             <div style="font-size: 32px; margin-bottom: 12px;">3️⃣</div>
             <h3 style="margin: 0 0 8px; font-size: 16px;">Beantwoord de vragen</h3>
             <p style="margin: 0; color: var(--muted); font-size: 14px;">
-                Geef eerlijk antwoord op alle vragen. Jouw mening is waardevol!
+                Kies bij elke vraag een antwoord. Open vragen mag u overslaan.
             </p>
         </div>
         <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
             <div style="font-size: 32px; margin-bottom: 12px;">📧</div>
             <h3 style="margin: 0 0 8px; font-size: 16px;">Bevestig per e-mail</h3>
             <p style="margin: 0; color: var(--muted); font-size: 14px;">
-                Check je mailbox en bevestig je stem. Dit zorgt ervoor dat je antwoord telt!
+                Bij sommige vragenlijsten krijgt u een e-mail met een link. Pas als u daarop klikt, tellen uw antwoorden mee.
             </p>
         </div>
         <div style="padding: 24px; background: var(--surface); border-radius: 12px; border: 1px solid var(--line);">
             <div style="font-size: 32px; margin-bottom: 12px;">✅</div>
-            <h3 style="margin: 0 0 8px; font-size: 16px;">Klaar!</h3>
+            <h3 style="margin: 0 0 8px; font-size: 16px;">Klaar</h3>
             <p style="margin: 0; color: var(--muted); font-size: 14px;">
-                Je stem is verwerkt. Bedankt dat je hebt deelgenomen!
+                Uw antwoorden zijn verwerkt. Bedankt voor het meedoen.
             </p>
         </div>
     </div>
 </div>
 
 <div style="margin-bottom: 32px;">
-    <h1 style="margin-bottom: 6px;">📋 Beschikbare Polls</h1>
-    <p class="meta">Vul een poll in en deel jouw mening • Jouw antwoord telt!</p>
+    <h1 style="margin-bottom: 6px;">📋 Open vragenlijsten</h1>
+    <p class="meta">Kies hieronder een vragenlijst.</p>
 </div>
 
 {{-- Why Email Verification --}}
 <div style="margin-bottom: 48px; padding: 24px; background: #fef3c7; border: 2px solid #fbbf24; border-radius: 12px;">
     <h3 style="margin: 0 0 12px; color: #92400e; display: flex; align-items: center; gap: 8px;">
-        <span>🔐</span> Waarom e-mail bevestiging?
+        <span>🔐</span> Waarom een bevestiging per e-mail?
     </h3>
     <p style="margin: 0; color: #b45309; line-height: 1.6;">
-        We sturen je een bevestigingslink per e-mail om ervoor te zorgen dat jij echt bent wie je zegt te zijn. 
-        Dit voorkomt dat iemand anders je e-mailadres gebruikt en zorgt ervoor dat het resultaten van de poll 
-        betrouwbaar blijven. Je hebt 24 uur de tijd om je stem te bevestigen.
+        Met de bevestigingslink controleren wij of het e-mailadres van u is. Zo kan niemand anders namens u
+        antwoorden en blijft de uitslag betrouwbaar. De link is zeven dagen geldig.
     </p>
 </div>
 
 @if($polls->isEmpty())
     <div class="card" style="text-align: center; padding: 60px 20px;">
         <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
-        <h2>Geen polls beschikbaar</h2>
-        <p style="color: var(--muted); margin-bottom: 0;">Er zijn op dit moment geen polls beschikbaar. Kom later terug!</p>
+        <h2>Geen vragenlijsten</h2>
+        <p style="color: var(--muted); margin-bottom: 0;">Op dit moment staan er geen vragenlijsten open.</p>
     </div>
 @else
     <div style="display: grid; gap: 16px;">

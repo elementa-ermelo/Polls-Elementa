@@ -70,7 +70,7 @@ class PollController extends Controller
         }
 
         if (! $poll->isOpen()) {
-            return back()->with('error', 'Deze poll is gesloten.');
+            return back()->with('error', 'Deze vragenlijst is gesloten.');
         }
 
         // Check access code if poll has one
@@ -83,7 +83,7 @@ class PollController extends Controller
 
         $questions = $poll->questions()->get();
         if ($questions->isEmpty()) {
-            return back()->with('error', 'Deze poll bevat geen vragen.');
+            return back()->with('error', 'Deze vragenlijst bevat geen vragen.');
         }
 
         $respondentName = $request->string('respondent_name')->toString();
@@ -175,20 +175,20 @@ class PollController extends Controller
                 'poll_id' => $poll->id,
                 'email' => $email,
             ]);
-            return back()->with('error', 'Je antwoorden konden niet worden opgeslagen. Probeer het nog een keer.')->withInput();
+            return back()->with('error', 'Uw antwoorden zijn niet opgeslagen. Probeert u het nog een keer.')->withInput();
         }
 
         if (! $needsConfirm) {
             return redirect()->route('polls.show', $poll)
-                ->with('success', '✓ Bedankt! Je antwoorden zijn opgeslagen.');
+                ->with('success', 'Bedankt. Uw antwoorden zijn opgeslagen.');
         }
 
         // Stem is opgeslagen — mail apart versturen
         try {
             $confirmUrl = route('polls.confirm', $token);
-            $message = "Hallo {$respondentName},\n\n";
-            $message .= "Bedankt voor het invullen van de poll '{$poll->title}'.\n\n";
-            $message .= "Bevestig je stem via deze link:\n";
+            $message = "Beste {$respondentName},\n\n";
+            $message .= "Bedankt voor het invullen van de vragenlijst '{$poll->title}'.\n\n";
+            $message .= "Uw antwoorden tellen mee zodra u ze bevestigt via deze link:\n";
             $message .= $confirmUrl . "\n\n";
             $message .= "Deze link is 7 dagen geldig.\n\n";
             $message .= "Met vriendelijke groeten,\n";
@@ -196,7 +196,7 @@ class PollController extends Controller
 
             Mail::raw($message, function ($m) use ($email, $respondentName, $poll) {
                 $m->to($email, $respondentName)
-                  ->subject("⏳ Bevestig je stem: {$poll->title}");
+                  ->subject("Bevestig uw antwoorden: {$poll->title}");
             });
 
             \Log::info("Bevestigingsmail verzonden", [
@@ -206,7 +206,7 @@ class PollController extends Controller
             ]);
 
             return redirect()->route('polls.show', $poll)
-                ->with('success', '✓ Je stem is opgeslagen! Check je mailbox voor de bevestigingslink.');
+                ->with('success', 'Uw antwoorden zijn opgeslagen. U krijgt een e-mail met een bevestigingslink. Ziet u die niet, kijk dan ook bij de ongewenste e-mail.');
         } catch (Throwable $e) {
             \Log::error("Mail verzenden mislukt: {$e->getMessage()}", [
                 'email' => $email,
@@ -214,7 +214,7 @@ class PollController extends Controller
             ]);
 
             return redirect()->route('polls.show', $poll)
-                ->with('success', '✓ Je stem is opgeslagen, maar de bevestigingsmail kon niet worden verzonden. Neem contact op met de organisator.');
+                ->with('success', 'Uw antwoorden zijn opgeslagen. De bevestigingsmail is niet verstuurd. Neemt u contact op met de organisator.');
         }
     }
 
@@ -223,17 +223,17 @@ class PollController extends Controller
         $vote = Vote::query()->where('confirmation_token', $token)->first();
 
         if (! $vote) {
-            return redirect()->route('polls.index')->with('error', 'Ongeldige of verlopen bevestigingslink.');
+            return redirect()->route('polls.index')->with('error', 'Deze bevestigingslink werkt niet of is verlopen.');
         }
 
         if ($vote->confirmation_sent_at && \Illuminate\Support\Carbon::parse($vote->confirmation_sent_at)->lt(now()->subDays(7))) {
-            return redirect()->route('polls.index')->with('error', 'Deze bevestigingslink is verlopen. Vul de vragenlijst opnieuw in om een nieuwe link te krijgen.');
+            return redirect()->route('polls.index')->with('error', 'Deze bevestigingslink is verlopen. Vult u de vragenlijst opnieuw in, dan krijgt u een nieuwe link.');
         }
 
         $poll = $vote->poll;
 
         if (! $poll || ! $poll->isOpen()) {
-            return redirect()->route('polls.index')->with('error', 'De poll is gesloten; bevestigen is niet meer mogelijk.');
+            return redirect()->route('polls.index')->with('error', 'De vragenlijst is gesloten. Bevestigen kan niet meer.');
         }
 
         // Confirm all votes for this poll+email (they all share the same respondent)
@@ -245,7 +245,7 @@ class PollController extends Controller
                 'confirmation_token' => null,
             ]);
 
-        return redirect()->route('polls.show', $poll)->with('success', 'Je stem is bevestigd en verwerkt.');
+        return redirect()->route('polls.show', $poll)->with('success', 'Uw antwoorden zijn bevestigd en tellen mee.');
     }
 
     public function verifyAccessCode(Poll $poll): RedirectResponse
@@ -253,7 +253,7 @@ class PollController extends Controller
         $code = strtoupper(str_replace(' ', '', request()->string('access_code')->toString()));
 
         if ($code !== $poll->access_code) {
-            return back()->with('error', 'Ongeldige toegangscode.');
+            return back()->with('error', 'Deze toegangscode is niet goed.');
         }
 
         session(["poll_access_{$poll->id}" => $code]);
