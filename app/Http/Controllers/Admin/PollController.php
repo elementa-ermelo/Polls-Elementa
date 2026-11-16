@@ -172,21 +172,54 @@ class PollController extends Controller
             abort(403);
         }
 
+        // Filters in de uitslag: alleen inzenders met een bepaald antwoord en/of een bepaalde herkomst.
+        $filterAntwoord = request()->integer('antwoord') ?: null;
+        $filterHerkomst = request()->filled('herkomst') ? request()->string('herkomst')->toString() : null;
+        $emails = null;
+        if ($filterAntwoord) {
+            $emails = Vote::query()->where('poll_id', $poll->id)->where('poll_option_id', $filterAntwoord)
+                ->distinct()->pluck('email');
+        }
+        if ($filterHerkomst !== null) {
+            $metHerkomst = Vote::query()->where('poll_id', $poll->id)
+                ->when($filterHerkomst === 'onbekend', fn ($q) => $q->whereNull('herkomst'), fn ($q) => $q->where('herkomst', $filterHerkomst))
+                ->distinct()->pluck('email');
+            $emails = $emails === null ? $metHerkomst : $emails->intersect($metHerkomst)->values();
+        }
+        $beperk = fn ($q) => $emails === null ? $q : $q->whereIn('email', $emails);
+
         $poll->load([
-            'questions.options',
-            'questions.votes',
-            'options.votes',
-            'votes' => fn ($query) => $query->latest()->with(['option', 'question']),
+            'questions.options.votes' => $beperk,
+            'questions.votes' => $beperk,
+            'options.votes' => $beperk,
+            'votes' => fn ($query) => $beperk($query)->latest()->with(['option', 'question']),
         ]);
 
         $totalRespondents = $poll->votes()->distinct('email')->count('email');
         $confirmedRespondents = $poll->confirmedVotes()->distinct('email')->count('email');
+        $gefilterdeRespondenten = $emails === null ? null : $emails->count();
+
+        $herkomstOverzicht = Vote::query()->where('poll_id', $poll->id)
+            ->selectRaw("COALESCE(herkomst, 'onbekend') AS bron, COUNT(DISTINCT email) AS n")
+            ->groupBy('bron')->orderByDesc('n')->get();
+        $druksteUren = Vote::query()->where('poll_id', $poll->id)
+            ->selectRaw("DATE_FORMAT(created_at, '%d-%m %H:00') AS uur, COUNT(DISTINCT email) AS n")
+            ->groupBy('uur')->orderByDesc('n')->limit(5)->get();
+        // Antwoorden om op te filteren: keuzevragen met hooguit 8 opties (dus niet de cijferrijen).
+        $filterVragen = $poll->questions->filter(fn ($q) => ! \App\Support\PollType::isOpenTextType($q->type)
+            && $q->options->count() > 0 && $q->options->count() <= 8);
 
         return view('admin.polls.show', [
             'poll' => $poll,
             'totalRespondents' => $totalRespondents,
             'confirmedRespondents' => $confirmedRespondents,
             'canManage' => $poll->isManagedBy(auth()->user()),
+            'filterAntwoord' => $filterAntwoord,
+            'filterHerkomst' => $filterHerkomst,
+            'gefilterdeRespondenten' => $gefilterdeRespondenten,
+            'herkomstOverzicht' => $herkomstOverzicht,
+            'druksteUren' => $druksteUren,
+            'filterVragen' => $filterVragen,
         ]);
     }
 

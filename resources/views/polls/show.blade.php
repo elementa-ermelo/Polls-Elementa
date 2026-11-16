@@ -37,7 +37,7 @@
         </h3>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
             @if($poll->anonymous)
-            <strong>1. Anoniem.</strong> Wij vragen niet naar uw naam, e-mailadres of telefoonnummer. U kunt de vragenlijst één keer invullen op dit apparaat.
+            <strong>1. Anoniem.</strong> Wij vragen niet naar uw naam, e-mailadres of telefoonnummer. Op één apparaat kunnen hooguit drie mensen uit hetzelfde huis de vragenlijst invullen.
             @else
             <strong>1. Uw gegevens.</strong> Wij vragen uw naam en e-mailadres. Uw telefoonnummer is niet verplicht.
             @endif
@@ -118,7 +118,11 @@
         </div>
     @elseif($alreadyOnDevice ?? false)
         <div class="card" style="padding:24px; text-align:center;">
-            <p style="margin:0; font-size:16px;">U heeft deze vragenlijst op dit apparaat ingevuld. Bedankt voor uw medewerking.</p>
+            <p style="margin:0; font-size:16px;">Deze vragenlijst is op dit apparaat ingevuld. Bedankt voor uw medewerking.</p>
+            @if($deviceRoom ?? false)
+                <p style="margin:16px 0 8px; font-size:14px; color:var(--muted);">Wil iemand anders in huis de vragenlijst ook invullen op dit apparaat?</p>
+                <a href="{{ route('polls.show', $poll) }}?nog=1" class="btn btn-primary" style="padding:10px 24px;">Nog iemand in huis vult in</a>
+            @endif
         </div>
     @elseif($poll->isOpen())
 
@@ -174,6 +178,13 @@
             {{-- Vragen --}}
             @if($poll->questions && $poll->questions->count() > 0)
 
+                @if($poll->questions->count() > 5)
+                <div class="voortgang" id="voortgang" aria-live="polite">
+                    <span id="voortgang-tekst">0 van {{ $poll->questions->count() }} vragen beantwoord</span>
+                    <div class="voortgang-balk"><span id="voortgang-vul"></span></div>
+                </div>
+                @endif
+
                 @foreach($poll->questions as $index => $question)
                 <div class="card" style="margin-bottom:16px; padding:20px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
@@ -204,10 +215,13 @@
                         </div>
 
                     @else
-                        @php($isScore = $question->options->isNotEmpty() && $question->options->every(fn ($o) => ctype_digit((string) $o->label)))
-                        <div class="choice-grid{{ $isScore ? ' choice-grid--score' : '' }}"@if($isScore) style="--n: {{ $question->options->count() }};"@endif>
+                        {{-- Cijferrij: alle opties zijn getallen, eventueel plus "Weet ik niet" (die komt eronder) --}}
+                        @php($cijfers = $question->options->filter(fn ($o) => ctype_digit((string) $o->label)))
+                        @php($overig = $question->options->reject(fn ($o) => ctype_digit((string) $o->label)))
+                        @php($isScore = $cijfers->count() >= 5 && $overig->every(fn ($o) => $o->label === 'Weet ik niet'))
+                        <div class="choice-grid{{ $isScore ? ' choice-grid--score' : '' }}"@if($isScore) style="--n: {{ $cijfers->count() }};"@endif>
                             @if($question->options && $question->options->count() > 0)
-                                @foreach($question->options as $option)
+                                @foreach($isScore ? $cijfers : $question->options as $option)
                                     @php($oid = 'q'.$question->id.'_o'.$option->id)
                                     <div>
                                         <input class="choice-inp" id="{{ $oid }}" type="radio"
@@ -223,6 +237,17 @@
                         @if($question->type === \App\Support\PollType::SCORE_1_10)
                             <div class="score-hint"><span>1 = heel slecht</span><span>10 = uitstekend</span></div>
                         @endif
+                        @if($isScore)
+                            @foreach($overig as $option)
+                                @php($oid = 'q'.$question->id.'_o'.$option->id)
+                                <div class="score-weetniet">
+                                    <input class="choice-inp" id="{{ $oid }}" type="radio"
+                                        name="question_{{ $question->id }}" value="{{ $option->id }}"
+                                        @checked((string) old('question_'.$question->id) === (string) $option->id)>
+                                    <label class="choice-lbl" for="{{ $oid }}">{{ $option->label }}</label>
+                                </div>
+                            @endforeach
+                        @endif
                     @endif
 
                     @error('question_'.$question->id)
@@ -235,7 +260,7 @@
                 <div class="card" style="padding:20px; text-align:center;">
                     <p style="margin:0 0 14px; color:var(--muted); font-size:14px;">
                         @if($poll->anonymous)
-                            U kunt de vragenlijst één keer invullen op dit apparaat.
+                            Op één apparaat kunnen hooguit drie mensen de vragenlijst invullen.
                         @elseif($poll->requires_confirmation)
                             Na het versturen ontvangt u een e-mail. Klik op de link in die mail om uw antwoorden te bevestigen.
                         @else
@@ -335,6 +360,19 @@
         .choice-grid--score[style*="--n: 11"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
     }
 
+    .score-weetniet { margin-top: 8px; }
+    .score-weetniet .choice-lbl { padding: 8px 16px; font-size: 14px; font-weight: 500; color: var(--muted); }
+
+    /* Voortgang */
+    .voortgang {
+        position: sticky; top: 0; z-index: 5;
+        margin: 0 0 16px; padding: 10px 14px;
+        background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+        font-size: 14px; color: var(--muted);
+    }
+    .voortgang-balk { margin-top: 6px; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+    .voortgang-balk span { display: block; height: 100%; width: 0; background: var(--primary); transition: width .2s; }
+
     /* Sterren */
     .star-wrap {
         display: inline-flex;
@@ -368,6 +406,35 @@
         transform: scale(1.15);
     }
     </style>
+
+    <script>
+    (function () {
+        var tekst = document.getElementById('voortgang-tekst');
+        if (!tekst) return;
+        var vul = document.getElementById('voortgang-vul');
+        var form = tekst.closest('form');
+        var namen = [];
+        form.querySelectorAll('[name^="question_"]').forEach(function (el) {
+            if (namen.indexOf(el.name) === -1) namen.push(el.name);
+        });
+        function tel() {
+            var klaar = 0;
+            namen.forEach(function (n) {
+                var els = form.querySelectorAll('[name="' + n + '"]');
+                var ja = false;
+                els.forEach(function (el) {
+                    if ((el.type === 'radio' && el.checked) || (el.tagName === 'TEXTAREA' && el.value.trim() !== '')) ja = true;
+                });
+                if (ja) klaar++;
+            });
+            tekst.textContent = klaar + ' van ' + namen.length + ' vragen beantwoord';
+            vul.style.width = (namen.length ? Math.round(klaar / namen.length * 100) : 0) + '%';
+        }
+        form.addEventListener('change', tel);
+        form.addEventListener('input', tel);
+        tel();
+    })();
+    </script>
 
     <script>
     // Scroll to top when page loads if there's a success or error message

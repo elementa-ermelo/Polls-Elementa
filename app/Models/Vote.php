@@ -20,6 +20,7 @@ class Vote extends Model
         'age',
         'numeric_value',
         'open_answer',
+        'herkomst',
         'confirmation_token',
         'confirmation_sent_at',
         'confirmed_at',

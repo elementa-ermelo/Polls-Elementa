@@ -157,6 +157,61 @@ function showTab(tab) {
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
         <h2 style="margin:0; font-size:15px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);">Resultaten</h2>
     </div>
+
+    {{-- Filter: alleen inzenders met een bepaald antwoord (bijv. woonplaats) en/of herkomst --}}
+    <form method="get" action="{{ route('admin.polls.show', $poll) }}" class="uitslag-filter">
+        <label>Alleen inzenders die antwoordden
+            <select name="antwoord">
+                <option value="">alle antwoorden</option>
+                @foreach($filterVragen as $fq)
+                    <optgroup label="{{ \Illuminate\Support\Str::limit($fq->question, 60) }}">
+                        @foreach($fq->options as $fo)
+                            <option value="{{ $fo->id }}" @selected($filterAntwoord === $fo->id)>{{ $fo->label }}</option>
+                        @endforeach
+                    </optgroup>
+                @endforeach
+            </select>
+        </label>
+        <label>Herkomst
+            <select name="herkomst">
+                <option value="">alle</option>
+                @foreach($herkomstOverzicht as $h)
+                    <option value="{{ $h->bron }}" @selected($filterHerkomst === $h->bron)>{{ $h->bron }} ({{ $h->n }})</option>
+                @endforeach
+            </select>
+        </label>
+        <button type="submit" class="btn btn-primary" style="padding:8px 16px;">Toon</button>
+        @if($gefilterdeRespondenten !== null)
+            <a href="{{ route('admin.polls.show', $poll) }}#resultaten" style="font-size:13px;">Filter wissen</a>
+            <span class="meta" style="font-size:13px;">{{ $gefilterdeRespondenten }} van {{ $poll->votes()->distinct('email')->count('email') }} inzenders</span>
+        @endif
+    </form>
+
+    @if($herkomstOverzicht->isNotEmpty())
+    <div class="uitslag-herkomst">
+        <div>
+            <p class="meta" style="margin:0 0 6px; font-size:12px; text-transform:uppercase;">Herkomst</p>
+            @foreach($herkomstOverzicht as $h)
+                <div style="font-size:13px;">{{ $h->bron }}: <strong>{{ $h->n }}</strong></div>
+            @endforeach
+        </div>
+        <div>
+            <p class="meta" style="margin:0 0 6px; font-size:12px; text-transform:uppercase;">Drukste uren</p>
+            @foreach($druksteUren as $u)
+                <div style="font-size:13px;">{{ $u->uur }}: <strong>{{ $u->n }}</strong></div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+    <style>
+        .uitslag-filter { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin:0 0 16px; }
+        .uitslag-filter label { display:flex; flex-direction:column; gap:4px; font-size:13px; color:var(--muted); }
+        .uitslag-filter select { min-width:220px; max-width:100%; padding:7px 8px; }
+        .uitslag-herkomst { display:flex; flex-wrap:wrap; gap:32px; padding:12px 14px; margin:0 0 20px; background:var(--bg); border-radius:10px; }
+    </style>
+    @if($gefilterdeRespondenten !== null || request()->has('antwoord'))
+        <script>document.addEventListener('DOMContentLoaded', function () { showTab('resultaten'); });</script>
+    @endif
     @foreach($poll->questions as $qi => $question)
         @php
             $qTotal = $question->votes->whereNotNull('confirmed_at')->count();

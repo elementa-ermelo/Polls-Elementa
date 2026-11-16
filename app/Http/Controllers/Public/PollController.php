@@ -9,6 +9,7 @@ use App\Models\Vote;
 use App\Support\PollType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
@@ -58,11 +59,21 @@ class PollController extends Controller
             }
         }
 
+        // Herkomst onthouden: de site waar de bezoeker vandaan kwam, of ?bron=... (bijv. op een flyer-QR).
+        $bron = $this->herkomstUitVerzoek();
+        if ($bron !== null) {
+            session(["poll_herkomst_{$poll->id}" => $bron]);
+        }
+
+        $deviceUsed = $poll->anonymous ? $this->deviceSlotsUsed($poll) : 0;
+        $deviceRoom = $deviceUsed < self::PER_APPARAAT;
+
         return view('polls.show', [
             'poll' => $poll,
             'allPolls' => $allPolls,
             'needsAccessCode' => $needsAccessCode,
-            'alreadyOnDevice' => $poll->anonymous && $this->deviceHasVoted($poll),
+            'alreadyOnDevice' => $deviceUsed > 0 && ! ($deviceRoom && request()->boolean('nog')),
+            'deviceRoom' => $deviceRoom,
         ]);
     }
 
@@ -101,7 +112,8 @@ class PollController extends Controller
         // de resultaten per inzender gewoon blijven werken.
         $anonLimitKey = null;
         if ($poll->anonymous) {
-            if ($this->deviceHasVoted($poll)) {
+            $slot = $this->deviceSlotsUsed($poll);
+            if ($slot >= self::PER_APPARAAT) {
                 return redirect()->route('polls.show', $poll);
             }
             $anonLimitKey = 'anon-vote:' . $poll->id . ':' . sha1((string) $request->ip());
@@ -109,7 +121,7 @@ class PollController extends Controller
                 return back()->withInput()->with('error', 'Vanaf deze internetaansluiting is de vragenlijst vandaag al vaak ingevuld. Probeert u het morgen nog eens.');
             }
             $respondentName = 'Anoniem';
-            $email          = $this->deviceKey($poll, $this->deviceId(true));
+            $email          = $this->deviceKey($poll, $this->deviceId(true), $slot);
             $phone          = '';
             $age            = 0;
             $needsConfirm   = false;
@@ -166,6 +178,7 @@ class PollController extends Controller
                         'age'             => $age,
                         'numeric_value'   => $option && is_numeric($option->value) ? (int) $option->value : null,
                         'open_answer'     => $openAnswer,
+                        'herkomst'        => session("poll_herkomst_{$poll->id}", 'direct'),
                     ];
 
                     if (! $needsConfirm) {
@@ -203,6 +216,8 @@ class PollController extends Controller
         if ($anonLimitKey) {
             RateLimiter::hit($anonLimitKey, 86400);
         }
+
+        $this->piekMelding($poll);
 
         if (! $needsConfirm) {
             return redirect()->route('polls.show', $poll)
@@ -259,18 +274,82 @@ class PollController extends Controller
         return $id;
     }
 
-    private function deviceKey(Poll $poll, string $deviceId): string
+    /** Hoeveel mensen mogen op één apparaat invullen (echtpaar met één tablet). */
+    private const PER_APPARAAT = 3;
+
+    /** Inzenders per uur waarboven de eigenaar een piekmelding krijgt (hooguit eens per 3 uur). */
+    private const PIEK_PER_UUR = 25;
+
+    private function deviceKey(Poll $poll, string $deviceId, int $slot = 0): string
     {
-        return 'apparaat-' . substr(hash('sha256', $poll->id . '|' . $deviceId), 0, 32) . '@anoniem.invalid';
+        $basis = $poll->id . '|' . $deviceId . ($slot > 0 ? '|' . $slot : '');
+        return 'apparaat-' . substr(hash('sha256', $basis), 0, 32) . '@anoniem.invalid';
     }
 
-    private function deviceHasVoted(Poll $poll): bool
+    /** Aantal inzendingen dat al vanaf dit apparaat is gedaan (0 t/m PER_APPARAAT). */
+    private function deviceSlotsUsed(Poll $poll): int
     {
         $id = $this->deviceId();
-        return $id !== null && Vote::query()
-            ->where('poll_id', $poll->id)
-            ->where('email', $this->deviceKey($poll, $id))
-            ->exists();
+        if ($id === null) {
+            return 0;
+        }
+        $used = 0;
+        for ($slot = 0; $slot < self::PER_APPARAAT; $slot++) {
+            $bestaat = Vote::query()
+                ->where('poll_id', $poll->id)
+                ->where('email', $this->deviceKey($poll, $id, $slot))
+                ->exists();
+            if (! $bestaat) {
+                break;
+            }
+            $used++;
+        }
+        return $used;
+    }
+
+    /** Domein van de verwijzende site of ?bron=..., zonder www./m./l.; null als het van deze site zelf komt. */
+    private function herkomstUitVerzoek(): ?string
+    {
+        $bron = trim(mb_strtolower(request()->string('bron')->toString()));
+        if ($bron !== '') {
+            return mb_substr(preg_replace('/[^a-z0-9._-]/', '', $bron), 0, 100) ?: null;
+        }
+        $host = parse_url((string) request()->headers->get('referer'), PHP_URL_HOST);
+        if (! is_string($host) || $host === '' || $host === request()->getHost()) {
+            return null;
+        }
+        $host = mb_strtolower(preg_replace('/^(www|m|l|lm|mobile)\./', '', $host));
+        return mb_substr($host, 0, 100);
+    }
+
+    /** Mail aan de eigenaar als er ineens veel inzendingen binnenkomen (teken van een oproep in een groep). */
+    private function piekMelding(Poll $poll): void
+    {
+        try {
+            $sinds = now()->subHour();
+            $aantal = Vote::query()->where('poll_id', $poll->id)->where('created_at', '>=', $sinds)
+                ->distinct('email')->count('email');
+            if ($aantal < self::PIEK_PER_UUR || ! Cache::add("piekmelding:{$poll->id}", 1, now()->addHours(3))) {
+                return;
+            }
+            $ontvanger = $poll->user?->email;
+            if (! $ontvanger || ! str_contains($ontvanger, '@')) {
+                return;
+            }
+            $perBron = Vote::query()->where('poll_id', $poll->id)->where('created_at', '>=', $sinds)
+                ->selectRaw("COALESCE(herkomst, 'onbekend') AS bron, COUNT(DISTINCT email) AS n")
+                ->groupBy('bron')->orderByDesc('n')->get()
+                ->map(fn ($r) => "- {$r->bron}: {$r->n}")->implode("\n");
+            $tekst = "Bij de vragenlijst '{$poll->title}' kwamen het afgelopen uur {$aantal} inzendingen binnen.\n\n"
+                . "Herkomst:\n{$perBron}\n\n"
+                . "In het beheer kunt u bij Resultaten op herkomst filteren.\n"
+                . route('admin.polls.show', $poll) . "\n\n"
+                . "U krijgt deze melding hooguit eens per drie uur.";
+            Mail::raw($tekst, fn ($m) => $m->to($ontvanger)->subject("Veel inzendingen: {$poll->title}"));
+            \Log::info('Piekmelding verstuurd', ['poll_id' => $poll->id, 'aantal' => $aantal]);
+        } catch (Throwable $e) {
+            \Log::error('Piekmelding mislukt: ' . $e->getMessage(), ['poll_id' => $poll->id]);
+        }
     }
 
     public function confirm(string $token): RedirectResponse
