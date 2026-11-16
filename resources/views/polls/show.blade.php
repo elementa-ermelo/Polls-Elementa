@@ -43,7 +43,7 @@
             @endif
         </p>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
-            <strong>2. De vragen.</strong> Wij zijn heel benieuwd naar wat u vindt, wilt u alle vragen beantwoorden? Het zijn er veel maar we hebben het met cijfers zo makkelijk mogelijk proberen te maken.
+            <strong>2. De vragen.</strong> Wij zijn heel benieuwd naar wat u vindt, wilt u alle vragen beantwoorden? Het zijn er veel maar we hebben het met cijfers zo makkelijk mogelijk proberen te maken. Wij kunnen uw antwoorden goed gebruiken, dank u wel alvast.
         </p>
         @if($poll->requires_confirmation && ! $poll->anonymous)
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
@@ -119,8 +119,13 @@
             </form>
         </div>
     @elseif($alreadyOnDevice ?? false)
+        @if(session('success'))
+            @include('polls.partials.beloning')
+        @endif
         <div class="card" style="padding:24px; text-align:center;">
+            @unless(session('success'))
             <p style="margin:0; font-size:16px;">Deze vragenlijst is op dit apparaat ingevuld. Bedankt voor uw medewerking.</p>
+            @endunless
             @if($deviceRoom ?? false)
                 <p style="margin:16px 0 8px; font-size:14px; color:var(--muted);">Wil iemand anders in huis de vragenlijst ook invullen op dit apparaat?</p>
                 <a href="{{ route('polls.show', $poll) }}?nog=1" class="btn btn-primary" style="padding:10px 24px;">Nog iemand in huis vult in</a>
@@ -553,29 +558,6 @@
     })();
     </script>
 
-    @if(session('success'))
-    <script nonce="{{ $cspNonce ?? '' }}">
-    // Confetti in het groen en geel van Centrum Ermelo bij het bedankje (niet bij "minder beweging").
-    (function () {
-        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-        var kleuren = ['#2f8f3a', '#8cc63f', '#c8d400', '#e6e000', '#ffffff'];
-        var laag = document.createElement('div'); laag.className = 'confetti-laag'; document.body.appendChild(laag);
-        for (var i = 0; i < 90; i++) {
-            var c = document.createElement('i');
-            c.style.left = (Math.random() * 100) + 'vw';
-            c.style.background = kleuren[i % kleuren.length];
-            c.style.animationDelay = (Math.random() * 0.8) + 's';
-            c.style.animationDuration = (2.4 + Math.random() * 1.6) + 's';
-            c.style.setProperty('--draai', (Math.random() * 720 - 360) + 'deg');
-            c.style.setProperty('--zij', (Math.random() * 80 - 40) + 'px');
-            laag.appendChild(c);
-        }
-        var logo = document.querySelector('.topnav-logo img');
-        if (logo) logo.classList.add('klop');
-        setTimeout(function () { laag.remove(); }, 5500);
-    })();
-    </script>
-    @endif
 
     <script nonce="{{ $cspNonce ?? '' }}">
     // Scroll to top when page loads if there's a success or error message
