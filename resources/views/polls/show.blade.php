@@ -283,8 +283,15 @@
                 </div>
                 @if($stopOptie)
                 <div class="card stop-melding" data-voor="{{ $question->id }}" hidden>
-                    <p style="margin:0 0 12px; font-size:15px; line-height:1.5;">U heeft "{{ $stopOptie->label }}" gekozen. De andere vragen zijn dan niet nodig; u kunt hieronder meteen versturen. Bedankt dat u toch even meedeed.</p>
-                    <button type="button" class="btn toch-verder">Toch alle vragen invullen</button>
+                    @if($index === 0)
+                        {{-- exit bij de eerste vraag (woonplaats buiten de regio); "toch verder" blijft (IJme) --}}
+                        <p class="stop-klaar">Dan zijn we nu klaar</p>
+                        <p style="margin:0 0 12px; font-size:15px; line-height:1.5; text-align:center;">Bedankt voor uw belangstelling. U kunt hieronder versturen.</p>
+                        <p style="margin:0; text-align:center;"><button type="button" class="btn toch-verder">Toch alle vragen invullen</button></p>
+                    @else
+                        <p style="margin:0 0 12px; font-size:15px; line-height:1.5;">U heeft "{{ $stopOptie->label }}" gekozen. De andere vragen zijn dan niet nodig; u kunt hieronder meteen versturen. Bedankt dat u toch even meedeed.</p>
+                        <button type="button" class="btn toch-verder">Toch alle vragen invullen</button>
+                    @endif
                 </div>
                 @endif
                 @endforeach
@@ -417,6 +424,7 @@
     /* Slimme sprong */
     .vraagkaart.overgeslagen { display: none; }
     .stop-melding { margin-bottom: 16px; padding: 20px; background: #f0f9e8; border: 1px solid #c6e3a8; }
+    .stop-klaar { margin: 0 0 10px; font-size: 30px; line-height: 1.2; font-weight: 700; color: #2f6f2f; text-align: center; }
 
     /* Lichtjesslinger als voortgang: elk beantwoorde vraag een lampje */
     .slinger { display: flex; gap: 2px; align-items: flex-start; width: 100%; margin: 8px auto 0; padding-top: 3px; border-top: 1px solid #9ca3af; }
