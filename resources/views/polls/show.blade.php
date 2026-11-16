@@ -221,7 +221,10 @@
                         @php($cijfers = $question->options->filter(fn ($o) => ctype_digit((string) $o->label)))
                         @php($overig = $question->options->reject(fn ($o) => ctype_digit((string) $o->label)))
                         @php($isScore = $cijfers->count() >= 5 && $overig->every(fn ($o) => $o->label === 'Weet ik niet'))
-                        <div class="choice-grid{{ $isScore ? ' choice-grid--score' : '' }}"@if($isScore) style="--n: {{ $cijfers->count() }};"@endif>
+                        {{-- Gewone keuzes gelijkmatig over de regels: 7 antwoorden = 4 + 3, niet 6 + 1 (een los laatste antwoord werd over het hoofd gezien) --}}
+                        @php($nOpt = $question->options->count())
+                        @php($kol = $nOpt > 0 ? (int) ceil($nOpt / ceil($nOpt / 6)) : 1)
+                        <div class="choice-grid{{ $isScore ? ' choice-grid--score' : ' choice-grid--kol' }}" style="{{ $isScore ? '--n: '.$cijfers->count().';' : '--kol: '.$kol.';' }}">
                             @if($question->options && $question->options->count() > 0)
                                 @foreach($isScore ? $cijfers : $question->options as $option)
                                     @php($oid = 'q'.$question->id.'_o'.$option->id)
@@ -341,6 +344,10 @@
         box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
         font-weight: 700;
         color: var(--primary);
+    }
+
+    @media (min-width: 641px) {
+        .choice-grid--kol { grid-template-columns: repeat(var(--kol, 3), minmax(0, 1fr)); }
     }
 
     /* Cijfers 1-10: één rij op breed scherm, twee rijen van vijf op de telefoon */
