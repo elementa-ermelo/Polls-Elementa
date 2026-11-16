@@ -30,7 +30,11 @@ class Stopregel
     /** Positie van de vraag waarbij de invuller het stopantwoord koos, of null. */
     public static function positie(Poll $poll, array $invoer): ?int
     {
+        $verborgen = self::verborgen($poll, $invoer);
         foreach ($poll->questions as $q) {
+            if (in_array($q->id, $verborgen, true)) {
+                continue; // een verborgen vervolgvraag kan niet laten stoppen
+            }
             if (self::gekozen($q, $invoer, $q->stop_bij)) {
                 return (int) $q->position;
             }

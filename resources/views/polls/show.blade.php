@@ -283,15 +283,10 @@
                 </div>
                 @if($stopOptie)
                 <div class="card stop-melding" data-voor="{{ $question->id }}" hidden>
-                    @if($index === 0)
-                        {{-- exit bij de eerste vraag (woonplaats buiten de regio); "toch verder" blijft (IJme) --}}
-                        <p class="stop-klaar">Dan zijn we nu klaar</p>
-                        <p style="margin:0 0 12px; font-size:15px; line-height:1.5; text-align:center;">Bedankt voor uw belangstelling. U kunt hieronder versturen.</p>
-                        <p style="margin:0; text-align:center;"><button type="button" class="btn toch-verder">Toch alle vragen invullen</button></p>
-                    @else
-                        <p style="margin:0 0 12px; font-size:15px; line-height:1.5;">U heeft "{{ $stopOptie->label }}" gekozen. De andere vragen zijn dan niet nodig; u kunt hieronder meteen versturen. Bedankt dat u toch even meedeed.</p>
-                        <button type="button" class="btn toch-verder">Toch alle vragen invullen</button>
-                    @endif
+                    {{-- elke stop (buiten de regio, nooit in het centrum) dezelfde grote melding; "toch verder" blijft (IJme) --}}
+                    <p class="stop-klaar">Dan zijn we nu klaar</p>
+                    <p style="margin:0 0 12px; font-size:15px; line-height:1.5; text-align:center;">Bedankt voor uw belangstelling. U kunt hieronder versturen.</p>
+                    <p style="margin:0; text-align:center;"><button type="button" class="btn toch-verder">Toch alle vragen invullen</button></p>
                 </div>
                 @endif
                 @endforeach
@@ -512,10 +507,17 @@
             });
             return ja;
         }
+        function vervolgVerborgen(k) {
+            var v = kaarten[kaarten.indexOf(k) - 1];
+            if (!v || !v.hasAttribute('data-vervolg-bij')) return false;
+            var o = document.getElementById(v.getAttribute('data-vervolg-bij'));
+            return !(o && o.checked);
+        }
         function actieveStop() {
             if (toch) return null;
             var gekozen = null;
             stopKaarten.forEach(function (k) {
+                if (vervolgVerborgen(k)) return; // verborgen vervolgvraag laat niet stoppen
                 var o = document.getElementById(k.getAttribute('data-stop-optie'));
                 if (o && o.checked && (!gekozen || parseInt(k.getAttribute('data-pos'), 10) < parseInt(gekozen.getAttribute('data-pos'), 10))) gekozen = k;
             });
