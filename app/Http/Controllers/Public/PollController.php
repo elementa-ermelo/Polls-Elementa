@@ -371,6 +371,7 @@ class PollController extends Controller
                 . route('admin.polls.show', $poll) . "\n\n"
                 . "U krijgt deze melding hooguit eens per drie uur.";
             Mail::raw($tekst, fn ($m) => $m->to($ontvanger)->subject("Veel inzendingen: {$poll->title}"));
+            \App\Support\Telefoonalarm::stuur("Veel inzendingen: {$poll->title}", "{$aantal} inzendingen in het afgelopen uur.\n{$perBron}");
             \Log::info('Piekmelding verstuurd', ['poll_id' => $poll->id, 'aantal' => $aantal]);
         } catch (Throwable $e) {
             \Log::error('Piekmelding mislukt: ' . $e->getMessage(), ['poll_id' => $poll->id]);

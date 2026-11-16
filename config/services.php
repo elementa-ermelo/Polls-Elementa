@@ -2,6 +2,13 @@
 
 return [
 
+    // Trilalarm op de telefoon via de eigen meldserver (App\Support\Telefoonalarm)
+    'ntfy' => [
+        'server' => env('NTFY_SERVER'),
+        'topic' => env('NTFY_TOPIC'),
+        'token' => env('NTFY_TOKEN'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Third Party Services
