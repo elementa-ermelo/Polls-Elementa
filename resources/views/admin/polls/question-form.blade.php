@@ -66,6 +66,16 @@
         </select>
         <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Alleen de vraag direct hierna verdwijnt; die telt in de uitslag als "niet gevraagd".</p>
     </div>
+    <div class="field">
+        <label for="vervolg_bij">Vervolgvraag <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+        <select id="vervolg_bij" name="vervolg_bij">
+            <option value="">Volgende vraag altijd tonen</option>
+            @foreach($question->options as $o)
+                <option value="{{ $o->label }}" @selected(old('vervolg_bij', $question->vervolg_bij) === $o->label)>Volgende vraag alleen tonen bij "{{ $o->label }}"</option>
+            @endforeach
+        </select>
+        <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Bijvoorbeeld "Wat mist u?" alleen bij "Nee". Bij een ander antwoord telt de vervolgvraag als "niet gevraagd".</p>
+    </div>
     @endif
     <style>
         .switch-row { display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-weight:400; }

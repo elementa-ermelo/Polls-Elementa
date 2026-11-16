@@ -152,7 +152,8 @@ class PollController extends Controller
 
         try {
             $wegIds = \App\Support\Stopregel::overgeslagen($poll, $request->all());
-            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token, $needsConfirm, $wegIds): void {
+            $verborgenIds = \App\Support\Stopregel::verborgen($poll, $request->all());
+            DB::transaction(function () use ($request, $poll, $respondentName, $email, $phone, $age, $token, $needsConfirm, $wegIds, $verborgenIds): void {
                 $questions = $poll->questions()->get();
                 $isFirstQuestion = true;
 
@@ -166,6 +167,9 @@ class PollController extends Controller
 
                 foreach ($questions as $question) {
                     $overgeslagen = in_array($question->id, $wegIds, true);
+                    if (in_array($question->id, $verborgenIds, true)) {
+                        continue; // verborgen vervolgvraag: niets opslaan, ook geen eerder getypt antwoord
+                    }
                     $isOpenType = PollType::isOpenTextType((string) $question->type);
                     $option     = null;
                     $openAnswer = null;

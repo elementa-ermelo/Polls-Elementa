@@ -198,7 +198,8 @@
                 @foreach($poll->questions as $index => $question)
                 @php($stopOptie = $question->stop_bij ? $question->options->firstWhere('label', $question->stop_bij) : null)
                 @php($overOptie = $question->overslaan_bij ? $question->options->firstWhere('label', $question->overslaan_bij) : null)
-                <div class="card vraagkaart" data-vraag="{{ $question->id }}" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
+                @php($vervolgOptie = $question->vervolg_bij ? $question->options->firstWhere('label', $question->vervolg_bij) : null)
+                <div class="card vraagkaart" data-vraag="{{ $question->id }}" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif @if($vervolgOptie) data-vervolg-bij="q{{ $question->id }}_o{{ $vervolgOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
                         <div class="vraagnr" data-nr="{{ $index+1 }}" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
                         <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $question->question }}</h3>
@@ -534,6 +535,11 @@
                 if (!weg && vorige && vorige.hasAttribute('data-sla-over')) {
                     var o = document.getElementById(vorige.getAttribute('data-sla-over'));
                     weg = !!(o && o.checked);
+                }
+                // vervolgvraag: alleen tonen als bij de vorige vraag het juiste antwoord gekozen is
+                if (!weg && vorige && vorige.hasAttribute('data-vervolg-bij')) {
+                    var ov = document.getElementById(vorige.getAttribute('data-vervolg-bij'));
+                    weg = !(ov && ov.checked);
                 }
                 k.classList.toggle('overgeslagen', weg);
             });

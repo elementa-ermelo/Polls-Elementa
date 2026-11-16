@@ -19,6 +19,7 @@ class PollQuestion extends Model
         'standaard_antwoord',
         'stop_bij',
         'overslaan_bij',
+        'vervolg_bij',
         'type',
         'position',
     ];
