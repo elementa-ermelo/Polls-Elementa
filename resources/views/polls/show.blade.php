@@ -150,11 +150,14 @@
                         <input id="phone" type="tel" name="phone" value="{{ old('phone') }}" placeholder="0612345678" pattern="[0-9+\s-]*">
                         @error('phone')<p class="vote-err">{{ $message }}</p>@enderror
                     </div>
+                    {{-- Vraagt de poll zelf al naar leeftijd, dan dit losse veld niet ook nog tonen. --}}
+                    @unless($poll->questions->contains(fn ($q) => str_contains(mb_strtolower($q->question), 'leeftijd')))
                     <div class="field">
                         <label for="age">Leeftijd</label>
                         <input id="age" type="number" name="age" max="120" value="{{ old('age') }}" placeholder="bv. 28">
                         @error('age')<p class="vote-err">{{ $message }}</p>@enderror
                     </div>
+                    @endunless
                 </div>
             </div>
 
@@ -174,7 +177,7 @@
                     @if(\App\Support\PollType::isOpenTextType($question->type))
                         <div class="field" style="margin:0;">
                             <textarea name="question_{{ $question->id }}" rows="4"
-                                    placeholder="Typ hier uw antwoord…"
+                                    placeholder="Typ hier uw antwoord (niet verplicht)…"
                                     style="resize:vertical;">{{ old('question_'.$question->id) }}</textarea>
                         </div>
 

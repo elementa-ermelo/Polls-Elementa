@@ -130,7 +130,9 @@ class PollController extends Controller
                             $option = $question->options()->whereKey($optionId)->first();
                         }
                     } else {
-                        $openAnswer = $request->string("question_{$question->id}")->toString();
+                        // Open vragen zijn niet verplicht: leeg opslaan als null, zodat het resultatenscherm het overslaat.
+                        $openAnswer = trim($request->string("question_{$question->id}")->toString());
+                        $openAnswer = $openAnswer === '' ? null : $openAnswer;
                     }
 
                     // Only set confirmation token on first question (all votes share same token)

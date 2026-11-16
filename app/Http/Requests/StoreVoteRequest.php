@@ -26,7 +26,7 @@ class StoreVoteRequest extends FormRequest
         // All polls use multi-question validation
         foreach ($poll->questions as $question) {
             if (PollType::isOpenTextType((string) $question->type)) {
-                $rules["question_{$question->id}"] = ['required', 'string', 'max:5000'];
+                $rules["question_{$question->id}"] = ['nullable', 'string', 'max:5000'];
             } else {
                 // De gekozen optie moet bij DEZE vraag horen, niet bij een willekeurige andere.
                 $rules["question_{$question->id}"] = [
