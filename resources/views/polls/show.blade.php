@@ -194,7 +194,8 @@
                         </div>
 
                     @else
-                        <div class="choice-grid">
+                        @php($isScore = $question->type === \App\Support\PollType::SCORE_1_10)
+                        <div class="choice-grid{{ $isScore ? ' choice-grid--score' : '' }}">
                             @if($question->options && $question->options->count() > 0)
                                 @foreach($question->options as $option)
                                     @php($oid = 'q'.$question->id.'_o'.$option->id)
@@ -209,6 +210,9 @@
                                 <p style="color:var(--muted); font-size:14px;">Geen antwoordopties beschikbaar.</p>
                             @endif
                         </div>
+                        @if($isScore)
+                            <div class="score-hint"><span>1 = heel slecht</span><span>10 = uitstekend</span></div>
+                        @endif
                     @endif
 
                     @error('question_'.$question->id)
@@ -291,6 +295,31 @@
         box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
         font-weight: 700;
         color: var(--primary);
+    }
+
+    /* Cijfers 1-10: één rij op breed scherm, twee rijen van vijf op de telefoon */
+    .choice-grid--score {
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        gap: 6px;
+    }
+    .choice-grid--score .choice-lbl {
+        padding: 10px 0;
+        font-size: 15px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .choice-grid--score .choice-lbl:hover { transform: none; }
+    .score-hint {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--muted);
+    }
+    @media (max-width: 520px) {
+        .choice-grid--score { grid-template-columns: repeat(5, minmax(0, 1fr)); }
     }
 
     /* Sterren */
