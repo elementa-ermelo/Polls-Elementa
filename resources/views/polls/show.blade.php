@@ -418,8 +418,9 @@
     .stop-melding { margin-bottom: 16px; padding: 20px; background: #f0f9e8; border: 1px solid #c6e3a8; }
 
     /* Lichtjesslinger als voortgang: elk beantwoorde vraag een lampje */
-    .slinger { display: flex; gap: 2px; align-items: flex-start; margin-top: 8px; padding-top: 3px; border-top: 1px solid #9ca3af; }
-    .slinger .lamp { flex: 1 1 0; max-width: 14px; aspect-ratio: 3 / 4; border-radius: 50% 50% 45% 45%; background: #d1d5db; position: relative; }
+    .slinger { display: flex; gap: 2px; align-items: flex-start; width: 100%; margin: 8px auto 0; padding-top: 3px; border-top: 1px solid #9ca3af; }
+    .voortgang #voortgang-tekst { display: block; text-align: center; }
+    .slinger .lamp { flex: 1 1 0; aspect-ratio: 3 / 4; border-radius: 50% 50% 45% 45%; background: #d1d5db; position: relative; }
     .slinger .lamp:nth-child(odd) { margin-top: 3px; }
     .slinger .lamp::before { content: ''; position: absolute; top: -3px; left: 30%; width: 40%; height: 3px; background: #6b7280; border-radius: 1px; }
     .slinger .lamp.aan:nth-child(4n+1) { background: #f5c400; box-shadow: 0 0 6px 2px rgba(245, 196, 0, .65); }
@@ -518,6 +519,8 @@
         function bouwSlinger(n) {
             if (!slinger || slinger.children.length === n) return;
             slinger.innerHTML = '';
+            // zo breed als de lampjes (max 16px per stuk), in het midden; op de telefoon de volle breedte
+            slinger.style.maxWidth = (n * 16) + 'px';
             for (var i = 0; i < n; i++) { var s = document.createElement('span'); s.className = 'lamp'; slinger.appendChild(s); }
         }
         function werkBij() {
