@@ -16,6 +16,7 @@ class PollQuestion extends Model
         'question',
         'help_text',
         'met_toelichting',
+        'standaard_antwoord',
         'type',
         'position',
     ];

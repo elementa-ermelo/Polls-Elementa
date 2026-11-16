@@ -35,6 +35,18 @@
             </span>
         </label>
     </div>
+    @if($question->exists && $question->options->isNotEmpty() && ! \App\Support\PollType::isOpenTextType($question->type))
+    <div class="field">
+        <label for="standaard_antwoord">Bij geen antwoord <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+        <select id="standaard_antwoord" name="standaard_antwoord">
+            <option value="">Antwoord is verplicht</option>
+            @foreach($question->options as $o)
+                <option value="{{ $o->label }}" @selected(old('standaard_antwoord', $question->standaard_antwoord) === $o->label)>Telt als: {{ $o->label }}</option>
+            @endforeach
+        </select>
+        <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Kies je een optie, dan mag de vraag leeg blijven en telt een leeg antwoord als die optie. Zet er in de toelichting bij wat er gebeurt.</p>
+    </div>
+    @endif
     <style>
         .switch-row { display:flex; align-items:flex-start; gap:12px; cursor:pointer; font-weight:400; }
         .switch-input { position:absolute; opacity:0; width:1px; height:1px; }

@@ -173,6 +173,10 @@ class PollController extends Controller
                         if ($optionId) {
                             $option = $question->options()->whereKey($optionId)->first();
                         }
+                        // Leeg gelaten en de vraag heeft een standaardantwoord: dat telt.
+                        if (! $option && $question->standaard_antwoord) {
+                            $option = $question->options()->where('label', $question->standaard_antwoord)->first();
+                        }
                         // Toelichting bij een cijfervraag (niet verplicht) in hetzelfde antwoordveld.
                         $toelichting = trim($request->string("toelichting_{$question->id}")->toString());
                         $openAnswer = $toelichting === '' ? null : $toelichting;

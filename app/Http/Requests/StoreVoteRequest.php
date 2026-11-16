@@ -31,7 +31,7 @@ class StoreVoteRequest extends FormRequest
                 // De gekozen optie moet bij DEZE vraag horen, niet bij een willekeurige andere.
                 $rules["toelichting_{$question->id}"] = ['nullable', 'string', 'max:2000'];
                 $rules["question_{$question->id}"] = [
-                    'required', 'integer',
+                    $question->standaard_antwoord ? 'nullable' : 'required', 'integer',
                     \Illuminate\Validation\Rule::exists('poll_options', 'id')->where('poll_question_id', $question->id),
                 ];
             }
