@@ -9,7 +9,9 @@ use App\Models\Vote;
 use App\Support\PollType;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Throwable;
 use Illuminate\View\View;
@@ -60,6 +62,7 @@ class PollController extends Controller
             'poll' => $poll,
             'allPolls' => $allPolls,
             'needsAccessCode' => $needsAccessCode,
+            'alreadyOnDevice' => $poll->anonymous && $this->deviceHasVoted($poll),
         ]);
     }
 
@@ -92,6 +95,25 @@ class PollController extends Controller
         $age            = $request->integer('age');
         $token          = Str::uuid()->toString();
         $needsConfirm   = (bool) $poll->requires_confirmation;
+
+        // Anoniem: geen persoonsgegevens. Het apparaatkenmerk (cookie) staat in de
+        // e-mailkolom, zodat de bestaande controle "al ingevuld" en de groepering in
+        // de resultaten per inzender gewoon blijven werken.
+        $anonLimitKey = null;
+        if ($poll->anonymous) {
+            if ($this->deviceHasVoted($poll)) {
+                return redirect()->route('polls.show', $poll);
+            }
+            $anonLimitKey = 'anon-vote:' . $poll->id . ':' . sha1((string) $request->ip());
+            if (RateLimiter::tooManyAttempts($anonLimitKey, 15)) {
+                return back()->withInput()->with('error', 'Vanaf deze internetaansluiting is de vragenlijst vandaag al vaak ingevuld. Probeert u het morgen nog eens.');
+            }
+            $respondentName = 'Anoniem';
+            $email          = $this->deviceKey($poll, $this->deviceId(true));
+            $phone          = '';
+            $age            = 0;
+            $needsConfirm   = false;
+        }
 
         // Wie al (bevestigd) heeft ingevuld, kan niet overschreven worden door
         // iemand die alleen het e-mailadres weet. Vroeger kon dat wel: een tweede
@@ -178,6 +200,10 @@ class PollController extends Controller
             return back()->with('error', 'Uw antwoorden zijn niet opgeslagen. Probeert u het nog een keer.')->withInput();
         }
 
+        if ($anonLimitKey) {
+            RateLimiter::hit($anonLimitKey, 86400);
+        }
+
         if (! $needsConfirm) {
             return redirect()->route('polls.show', $poll)
                 ->with('success', 'Bedankt. Uw antwoorden zijn opgeslagen.');
@@ -216,6 +242,35 @@ class PollController extends Controller
             return redirect()->route('polls.show', $poll)
                 ->with('success', 'Uw antwoorden zijn opgeslagen. De bevestigingsmail is niet verstuurd. Neemt u contact op met de organisator.');
         }
+    }
+
+    /** Anoniem apparaatkenmerk uit de cookie; maakt er een aan als $create waar is. */
+    private function deviceId(bool $create = false): ?string
+    {
+        $id = request()->cookie('polls_apparaat');
+        if (is_string($id) && preg_match('/^[0-9a-f-]{36}$/', $id)) {
+            return $id;
+        }
+        if (! $create) {
+            return null;
+        }
+        $id = Str::uuid()->toString();
+        Cookie::queue(Cookie::make('polls_apparaat', $id, 60 * 24 * 365 * 2, '/', null, true, true, false, 'Lax'));
+        return $id;
+    }
+
+    private function deviceKey(Poll $poll, string $deviceId): string
+    {
+        return 'apparaat-' . substr(hash('sha256', $poll->id . '|' . $deviceId), 0, 32) . '@anoniem.invalid';
+    }
+
+    private function deviceHasVoted(Poll $poll): bool
+    {
+        $id = $this->deviceId();
+        return $id !== null && Vote::query()
+            ->where('poll_id', $poll->id)
+            ->where('email', $this->deviceKey($poll, $id))
+            ->exists();
     }
 
     public function confirm(string $token): RedirectResponse

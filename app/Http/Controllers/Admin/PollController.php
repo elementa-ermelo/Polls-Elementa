@@ -104,6 +104,7 @@ class PollController extends Controller
                     'is_public' => $isPublic,
                     'access_code' => $accessCode,
                     'requires_confirmation' => $request->boolean('requires_confirmation'),
+                    'anonymous' => $request->boolean('anonymous'),
                     'user_id' => auth()->id(),
                 ]);
 
@@ -396,6 +397,7 @@ HTML;
                 'is_public' => $status === 'active',
                 'access_code' => $accessCode,
                 'requires_confirmation' => $request->boolean('requires_confirmation'),
+                    'anonymous' => $request->boolean('anonymous'),
             ]);
 
             return redirect()->route('admin.polls.show', $poll)->with('success', 'Poll bijgewerkt.');

@@ -16,7 +16,7 @@ class StoreVoteRequest extends FormRequest
     {
         $poll = $this->route('poll');
         
-        $rules = [
+        $rules = $poll->anonymous ? [] : [
             'respondent_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:20'],

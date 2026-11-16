@@ -24,6 +24,7 @@ class Poll extends Model
         'is_public',
         'access_code',
         'requires_confirmation',
+        'anonymous',
         'user_id',
     ];
 
@@ -34,6 +35,7 @@ class Poll extends Model
             'closes_at' => 'datetime',
             'is_public' => 'boolean',
             'requires_confirmation' => 'boolean',
+            'anonymous' => 'boolean',
         ];
     }
 

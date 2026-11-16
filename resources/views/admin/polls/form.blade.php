@@ -72,6 +72,21 @@
                 </span>
             </label>
         </div>
+
+        @php
+            $anonOn = (bool) old('anonymous', $poll->exists ? $poll->anonymous : false);
+        @endphp
+        <div class="field">
+            <input type="hidden" name="anonymous" value="0">
+            <label class="switch-row" for="anonymous">
+                <input type="checkbox" id="anonymous" name="anonymous" value="1" class="switch-input" @checked($anonOn)>
+                <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
+                <span>
+                    <strong>Anoniem invullen</strong><br>
+                    <span style="font-size:12px; color:var(--muted);">Aan: geen naam, e-mail of telefoon. Eén inzending per apparaat en hooguit 15 per internetaansluiting per dag. Bevestiging per e-mail vervalt dan. Uit: deelnemers vullen naam en e-mailadres in.</span>
+                </span>
+            </label>
+        </div>
     </div>
 
     <style>

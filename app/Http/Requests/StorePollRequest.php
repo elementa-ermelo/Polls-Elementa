@@ -25,6 +25,7 @@ class StorePollRequest extends FormRequest
             'questions_json' => ['nullable', 'string'],
             'access_code' => ['nullable', 'string', 'min:6', 'max:50'],
             'requires_confirmation' => ['nullable', 'boolean'],
+            'anonymous' => ['nullable', 'boolean'],
         ];
     }
 

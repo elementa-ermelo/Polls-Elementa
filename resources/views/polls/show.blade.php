@@ -36,12 +36,16 @@
             Zo werkt het
         </h3>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
+            @if($poll->anonymous)
+            <strong>1. Anoniem.</strong> Wij vragen niet naar uw naam, e-mailadres of telefoonnummer. U kunt de vragenlijst één keer invullen op dit apparaat.
+            @else
             <strong>1. Uw gegevens.</strong> Wij vragen uw naam en e-mailadres. Uw telefoonnummer is niet verplicht.
+            @endif
         </p>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
             <strong>2. De vragen.</strong> Wij zijn heel benieuwd naar wat u vindt, wilt u alle vragen beantwoorden?
         </p>
-        @if($poll->requires_confirmation)
+        @if($poll->requires_confirmation && ! $poll->anonymous)
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
             <strong>3. Versturen en bevestigen.</strong> Na het versturen krijgt u een e-mail met een link.
             Klikt u binnen zeven dagen op die link, dan tellen uw antwoorden mee.
@@ -112,6 +116,10 @@
                 <button type="submit" class="btn btn-primary" style="padding:10px 20px; white-space:nowrap;">Verder</button>
             </form>
         </div>
+    @elseif($alreadyOnDevice ?? false)
+        <div class="card" style="padding:24px; text-align:center;">
+            <p style="margin:0; font-size:16px;">U heeft deze vragenlijst op dit apparaat ingevuld. Bedankt voor uw medewerking.</p>
+        </div>
     @elseif($poll->isOpen())
 
         {{-- Foutmeldingen --}}
@@ -129,7 +137,8 @@
         <form method="post" action="{{ route('polls.vote', $poll) }}">
             @csrf
 
-            {{-- Persoonlijke gegevens --}}
+            {{-- Persoonlijke gegevens (niet bij een anonieme vragenlijst) --}}
+            @unless($poll->anonymous)
             <div class="card" style="margin-bottom:16px; padding:20px;">
                 <h2 style="margin:0 0 16px; font-size:16px; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:.05em;">Uw gegevens</h2>
                 <div class="grid grid-2">
@@ -160,6 +169,7 @@
                     @endunless
                 </div>
             </div>
+            @endunless
 
             {{-- Vragen --}}
             @if($poll->questions && $poll->questions->count() > 0)
@@ -224,7 +234,9 @@
                 {{-- Submit --}}
                 <div class="card" style="padding:20px; text-align:center;">
                     <p style="margin:0 0 14px; color:var(--muted); font-size:14px;">
-                        @if($poll->requires_confirmation)
+                        @if($poll->anonymous)
+                            U kunt de vragenlijst één keer invullen op dit apparaat.
+                        @elseif($poll->requires_confirmation)
                             Na het versturen ontvangt u een e-mail. Klik op de link in die mail om uw antwoorden te bevestigen.
                         @else
                             U kunt de lijst één keer per e-mailadres invullen.
