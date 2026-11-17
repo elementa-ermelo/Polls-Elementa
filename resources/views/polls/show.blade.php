@@ -42,8 +42,23 @@
             <strong>1. Uw gegevens.</strong> Wij vragen uw naam en e-mailadres. Uw telefoonnummer is niet verplicht.
             @endif
         </p>
+        <?php
+            // aantal kaarten zoals de invuller ze ziet: een themakaart telt één keer, een standaard verborgen vervolgvraag niet
+            $kaartAantal = 0; $heeftGroepen = false; $vorigeG = null;
+            foreach ($poll->questions->values() as $qi => $q) {
+                $g = trim((string) $q->groep) ?: null;
+                $heeftGroepen = $heeftGroepen || $g !== null;
+                $vorigeQ = $poll->questions->values()->get($qi - 1);
+                if (! ($vorigeQ && $vorigeQ->vervolg_bij) && ($g === null || $g !== $vorigeG)) { $kaartAantal++; }
+                $vorigeG = $g;
+            }
+        ?>
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
+            @if($heeftGroepen)
+            <strong>2. De vragen.</strong> {{ $kaartAantal }} kaarten, elk met vragen over één onderwerp, brengen u vanzelf naar de finish. Bij elke kaart gaat er bovenaan een lampje van de slinger branden. Wij zijn heel benieuwd naar wat u vindt, dank u wel alvast.
+            @else
             <strong>2. De vragen.</strong> Wij zijn heel benieuwd naar wat u vindt, wilt u alle vragen beantwoorden? Het zijn er veel maar we hebben het met cijfers zo makkelijk mogelijk proberen te maken. Wij kunnen uw antwoorden goed gebruiken, dank u wel alvast.
+            @endif
         </p>
         @if($poll->requires_confirmation && ! $poll->anonymous)
         <p style="margin:0 0 8px; color:#1e40af; font-size:14px; line-height:1.6;">
@@ -539,6 +554,13 @@
     @media (max-width: 520px) { .baan { height: 44px; margin-top: 4px; } .baan-vlag { width: 20px; height: 36px; } .loper { width: 31px; height: 42px; left: calc((100% - 30px - 31px) * var(--f)); } }
     @media (prefers-reduced-motion: reduce) { .loper, .loper * { animation: none !important; transition: none; } }
 
+    /* Kaarten duidelijk van elkaar: bovenrand in de kleur van het eigen lampje, schaduw, ruimte (IJme, 17 nov) */
+    .card.vraagkaart, .card.themakaart {
+        margin-bottom: 28px !important; padding-top: 26px !important;
+        border-color: #d5ddd6;
+        box-shadow: inset 0 6px 0 var(--lamp, #3b82f6), 0 10px 28px rgba(22, 58, 33, .12);
+    }
+
     /* Themakaarten: meer vragen op één kaart */
     .themakaart { margin-bottom: 16px; padding: 20px; }
     .themakaart.overgeslagen { display: none; }
@@ -694,6 +716,7 @@
                 // toelichting verschijnt zodra er een antwoord is (niet meer openklikken); bij een themakaart één per kaart
                 var t = e.el.querySelector('.toelichting');
                 if (t && t.hidden && iets) t.hidden = false;
+                e.el.style.setProperty('--lamp', ['#f5c400', '#e5484d', '#2f9e44', '#3b82f6'][j % 4]);
                 var nr = e.el.querySelector('.vraagnr');
                 if (!nr) return;
                 // doorlopend nummeren over de zichtbare kaarten (na een sprong geen gat in de nummers)
