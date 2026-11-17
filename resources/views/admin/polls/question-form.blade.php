@@ -25,13 +25,24 @@
     </div>
 
     <div class="field">
+        <label for="groep">Themakaart <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+        <input id="groep" name="groep" maxlength="120" value="{{ old('groep', $question->groep ?? '') }}" placeholder="Bijvoorbeeld: Welk cijfer geeft u de sfeer in het centrum?">
+        <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Vragen die direct na elkaar staan en dezelfde tekst hebben, komen samen op één kaart met deze tekst als titel. In de uitslag blijft elke vraag apart.</p>
+    </div>
+    <div class="field">
+        <label for="kort">Korte regel op de themakaart <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+        <input id="kort" name="kort" maxlength="255" value="{{ old('kort', $question->kort ?? '') }}" placeholder="Bijvoorbeeld: Gezelligheid">
+        <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Leeg: op de kaart staat de hele vraag.</p>
+    </div>
+
+    <div class="field">
         <input type="hidden" name="met_toelichting" value="0">
         <label class="switch-row" for="met_toelichting">
             <input type="checkbox" id="met_toelichting" name="met_toelichting" value="1" class="switch-input" @checked((bool) old('met_toelichting', $question->met_toelichting ?? false))>
             <span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span>
             <span>
                 <strong>Toelichtingsveld tonen</strong><br>
-                <span style="font-size:12px; color:var(--muted);">Aan: onder de antwoorden staat een ingeklapt, niet verplicht veld "Wilt u dit toelichten?". De toelichtingen staan in de uitslag bij de vraag.</span>
+                <span style="font-size:12px; color:var(--muted);">Aan: na een antwoord verschijnt een niet verplicht veld "Wilt u dit toelichten?". Op een themakaart staat er één, bij de eerste vraag met deze schakelaar. De toelichtingen staan in de uitslag bij de vraag.</span>
             </span>
         </label>
     </div>

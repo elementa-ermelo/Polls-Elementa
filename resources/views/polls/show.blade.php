@@ -224,11 +224,36 @@
                 @php($overOptie = $question->overslaan_bij ? $question->options->firstWhere('label', $question->overslaan_bij) : null)
                 @php($vervolgOptie = $question->vervolg_bij ? $question->options->firstWhere('label', $question->vervolg_bij) : null)
                 @php($mist = $errors->has('question_'.$question->id) || $errors->has('question_'.$question->id.'.*'))
-                <div class="card vraagkaart{{ $mist ? ' mist' : '' }}"@if(! \App\Support\PollType::isOpenTextType($question->type) && ! $question->standaard_antwoord) data-verplicht @endif data-vraag="{{ $question->id }}" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif @if($vervolgOptie) data-vervolg-bij="q{{ $question->id }}_o{{ $vervolgOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
-                        <div class="vraagnr" data-nr="{{ $index+1 }}" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
-                        <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $question->question }}</h3>
+                {{-- themakaart: opeenvolgende vragen met dezelfde groep op één kaart (IJme, 17 nov) --}}
+                <?php
+                    $groep = trim((string) $question->groep) ?: null;
+                    $opentGroep = $groep && trim((string) $poll->questions->get($index - 1)?->groep) !== $groep;
+                    $sluitGroep = $groep && trim((string) $poll->questions->get($index + 1)?->groep) !== $groep;
+                    if ($opentGroep) {
+                        $groepId = $question->id;
+                        $groepToel = null;
+                        for ($j = $index; $j < $poll->questions->count() && trim((string) $poll->questions->get($j)->groep) === $groep; $j++) {
+                            if (! $groepToel && $poll->questions->get($j)->met_toelichting) { $groepToel = $poll->questions->get($j); }
+                        }
+                    }
+                ?>
+                @if($opentGroep)
+                <div class="card themakaart" data-groep="{{ $groepId }}">
+                    <div class="kaartkop">
+                        <div class="vraagnr" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
+                        <h3>{{ $groep }}</h3>
                         <span class="nog-vragen" hidden></span>
+                    </div>
+                @endif
+                <div class="{{ $groep ? 'vraagkaart in-groep' : 'card vraagkaart' }}{{ $mist ? ' mist' : '' }}"@if($groep) data-in-groep="{{ $groepId }}"@endif @if(! \App\Support\PollType::isOpenTextType($question->type) && ! $question->standaard_antwoord) data-verplicht @endif data-vraag="{{ $question->id }}" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif @if($vervolgOptie) data-vervolg-bij="q{{ $question->id }}_o{{ $vervolgOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
+                        @unless($groep)
+                        <div class="vraagnr" data-nr="{{ $index+1 }}" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
+                        @endunless
+                        <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $groep && $question->kort ? $question->kort : $question->question }}</h3>
+                        @unless($groep)
+                        <span class="nog-vragen" hidden></span>
+                        @endunless
                     </div>
                     @if(\App\Support\PollType::isMultiple($question->type))
                         <p style="margin:-8px 0 14px 38px; font-size:14px; color:var(--muted); line-height:1.5;">U kunt meer antwoorden aanvinken.</p>
@@ -305,7 +330,7 @@
                                 </div>
                             @endforeach
                         @endif
-                        @if($question->met_toelichting)
+                        @if($question->met_toelichting && ! $groep)
                             @php($tk = 'toelichting_'.$question->id)
                             <div class="toelichting" @unless(old($tk)) hidden @endunless>
                                 <label for="{{ $tk }}">Wilt u dit toelichten? <span>Mag leeg blijven.</span></label>
@@ -323,6 +348,16 @@
                     <p class="stop-klaar">Dan zijn we nu klaar</p>
                     <p style="margin:0 0 12px; font-size:15px; line-height:1.5; text-align:center;">Bedankt voor uw belangstelling. U kunt hieronder versturen.</p>
                     <p style="margin:0; text-align:center;"><button type="button" class="btn toch-verder">Toch alle vragen invullen</button></p>
+                </div>
+                @endif
+                @if($sluitGroep)
+                    @if($groepToel)
+                        @php($tk = 'toelichting_'.$groepToel->id)
+                        <div class="toelichting" @unless(old($tk)) hidden @endunless>
+                            <label for="{{ $tk }}">Wilt u hier iets over toelichten? <span>Mag leeg blijven.</span></label>
+                            <textarea id="{{ $tk }}" name="{{ $tk }}" rows="2" maxlength="2000" placeholder="Uw toelichting">{{ old($tk) }}</textarea>
+                        </div>
+                    @endif
                 </div>
                 @endif
                 @endforeach
@@ -504,6 +539,19 @@
     @media (max-width: 520px) { .baan { height: 44px; margin-top: 4px; } .baan-vlag { width: 20px; height: 36px; } .loper { width: 31px; height: 42px; left: calc((100% - 30px - 31px) * var(--f)); } }
     @media (prefers-reduced-motion: reduce) { .loper, .loper * { animation: none !important; transition: none; } }
 
+    /* Themakaarten: meer vragen op één kaart */
+    .themakaart { margin-bottom: 16px; padding: 20px; }
+    .themakaart.overgeslagen { display: none; }
+    .themakaart .kaartkop { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .themakaart .kaartkop h3 { margin: 0; font-size: 18px; line-height: 1.3; }
+    .vraagkaart.in-groep { margin: 0 !important; padding: 16px 0 6px !important; border-top: 1px solid var(--line); }
+    .kaartkop + .vraagkaart.in-groep { border-top: 0; }
+    .vraagkaart.in-groep ~ .vraagkaart.in-groep .score-hint { display: none; } /* uitleg 1-10 alleen bij de eerste regel */
+    .vraagkaart.in-groep > p { margin-left: 0 !important; } /* geen inspringing: in een kaart staat er geen nummerbolletje voor */
+    .vraagkaart.in-groep > div:first-child { margin-bottom: 10px !important; }
+    .vraagkaart.in-groep h3 { font-size: 16px !important; font-weight: 600; }
+    .vraagkaart.in-groep.mist { border: 2px solid var(--danger); border-radius: 10px; padding: 14px 12px 8px !important; margin: 6px 0 !important; }
+
     /* Vinkje in het nummerbolletje */
     .vraagnr.klaar { background: #2f8f3a !important; animation: omdraaien .4s ease-out; }
     @keyframes omdraaien { from { transform: rotateY(90deg); } to { transform: rotateY(0); } }
@@ -628,42 +676,53 @@
             });
             meldingen.forEach(function (m) { m.hidden = !(stop && m.getAttribute('data-voor') === stopKaart.getAttribute('data-vraag')); });
             var zichtbaar = kaarten.filter(function (k) { return !k.classList.contains('overgeslagen'); });
+            zichtbaar.forEach(function (k) { if (beantwoord(k)) k.classList.remove('mist'); });
+            // themakaarten: vragen met dezelfde groep tellen als één kaart (nummer, lampje, "nog x")
+            var eenheden = [], perGroep = {};
+            zichtbaar.forEach(function (k) {
+                var g = k.getAttribute('data-in-groep');
+                if (!g) { eenheden.push({ el: k, leden: [k] }); return; }
+                if (!perGroep[g]) { perGroep[g] = { el: form.querySelector('.themakaart[data-groep="' + g + '"]'), leden: [] }; eenheden.push(perGroep[g]); }
+                perGroep[g].leden.push(k);
+            });
+            form.querySelectorAll('.themakaart').forEach(function (t) { t.classList.toggle('overgeslagen', !perGroep[t.getAttribute('data-groep')]); });
             var klaar = 0;
-            zichtbaar.forEach(function (k, j) {
-                var ja = beantwoord(k);
+            eenheden.forEach(function (e, j) {
+                var iets = e.leden.some(beantwoord);
+                var ja = iets && e.leden.every(function (k) { return !k.hasAttribute('data-verplicht') || beantwoord(k); });
                 if (ja) klaar++;
-                var nr = k.querySelector('.vraagnr');
+                // toelichting verschijnt zodra er een antwoord is (niet meer openklikken); bij een themakaart één per kaart
+                var t = e.el.querySelector('.toelichting');
+                if (t && t.hidden && iets) t.hidden = false;
+                var nr = e.el.querySelector('.vraagnr');
                 if (!nr) return;
-                // doorlopend nummeren over de zichtbare vragen (na een sprong geen gat in de nummers)
+                // doorlopend nummeren over de zichtbare kaarten (na een sprong geen gat in de nummers)
                 nr.setAttribute('data-nr', String(j + 1));
                 if (nr.classList.contains('klaar') !== ja) nr.classList.toggle('klaar', ja);
-                if (ja) k.classList.remove('mist');
                 nr.textContent = ja ? '\u2713' : String(j + 1);
-                // toelichting verschijnt zodra er een antwoord is (niet meer openklikken)
-                var t = k.querySelector('.toelichting');
-                if (t && t.hidden && ja) t.hidden = false;
-                // vanaf de helft: hoeveel vragen er nog komen
-                var nog = k.querySelector('.nog-vragen');
+                // vanaf de helft: hoeveel kaarten er nog komen
+                var nog = e.el.querySelector('.nog-vragen');
                 if (nog) {
-                    var rest = zichtbaar.length - j;
-                    nog.hidden = j < Math.floor(zichtbaar.length / 2);
+                    var rest = eenheden.length - j;
+                    nog.hidden = j < Math.floor(eenheden.length / 2);
                     nog.textContent = rest === 1 ? 'Laatste vraag' : 'Nog ' + rest + ' vragen';
                 }
             });
             // hardloper: schuift mee, sprint op het laatste stuk, springt bij de finish
             // binnen = alle verplichte vragen beantwoord (open vragen mogen leeg blijven)
-            var rest = zichtbaar.length - klaar;
+            var aantal = eenheden.length;
+            var rest = aantal - klaar;
             var openVerplicht = zichtbaar.filter(function (k) { return k.hasAttribute('data-verplicht') && !beantwoord(k); }).length;
-            var binnen = zichtbaar.length > 0 && openVerplicht === 0 && klaar >= zichtbaar.length / 2;
-            var sprint = !binnen && zichtbaar.length >= 16 && rest > 0 && rest <= 8;
-            if (baan) baan.style.setProperty('--f', binnen ? '1' : zichtbaar.length ? (klaar / zichtbaar.length).toFixed(3) : '0');
+            var binnen = aantal > 0 && openVerplicht === 0 && klaar >= aantal / 2;
+            var sprint = !binnen && aantal >= 12 && rest > 0 && rest <= Math.max(3, Math.round(aantal / 4));
+            if (baan) baan.style.setProperty('--f', binnen ? '1' : aantal ? (klaar / aantal).toFixed(3) : '0');
             if (loper) { loper.classList.toggle('sprint', sprint); loper.classList.toggle('binnen', binnen); }
             if (tekst) tekst.textContent = binnen ? 'Binnen! Nu nog op versturen drukken'
                 : sprint ? 'Laatste rechte stuk, nog ' + rest + (rest === 1 ? ' vraag' : ' vragen')
-                : klaar + ' van ' + zichtbaar.length + ' vragen beantwoord';
-            bouwSlinger(zichtbaar.length);
+                : klaar + ' van ' + aantal + ' vragen beantwoord';
+            bouwSlinger(aantal);
             if (slinger) Array.prototype.forEach.call(slinger.children, function (l, i) { l.classList.toggle('aan', i < klaar); });
-            var deel = zichtbaar.length ? klaar / zichtbaar.length : 0;
+            var deel = aantal ? klaar / aantal : 0;
             if (!eerste) {
                 if (deel >= 0.5 && !half) { half = true; klop(); }
                 if (deel >= 1 && !heel) { heel = true; klop(); }
@@ -693,7 +752,9 @@
             kaarten.forEach(function (k) { k.classList.toggle('mist', open.indexOf(k) >= 0); });
             if (!open.length) return;
             e.preventDefault();
-            window.scrollTo(0, open[0].getBoundingClientRect().top + window.scrollY - 140);
+            // onder de vaste balk (logo 60px + voortgang met slinger en loper) uitkomen
+            var kop = document.getElementById('voortgang');
+            window.scrollTo(0, open[0].getBoundingClientRect().top + window.scrollY - (kop ? 60 + kop.offsetHeight + 20 : 140));
         });
         werkBij();
     })();
@@ -706,7 +767,8 @@
         const flashElement = document.querySelector('.flash');
         const mistKaart = document.querySelector('.vraagkaart.mist');
         if (mistKaart) {
-            window.scrollTo(0, mistKaart.getBoundingClientRect().top + window.scrollY - 140);
+            const kop = document.getElementById('voortgang');
+            window.scrollTo(0, mistKaart.getBoundingClientRect().top + window.scrollY - (kop ? 60 + kop.offsetHeight + 20 : 140));
         } else if (flashElement) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
