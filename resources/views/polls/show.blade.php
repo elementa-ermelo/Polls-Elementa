@@ -192,6 +192,30 @@
                 <div class="voortgang" id="voortgang" aria-live="polite">
                     <span id="voortgang-tekst">0 van {{ $poll->questions->count() }} vragen beantwoord</span>
                     <div class="slinger" id="slinger" aria-hidden="true"></div>
+                    {{-- hardloper met startnummer 2040 die naar de finish loopt; sprint op het laatste stuk (IJme, 17 nov) --}}
+                    <div class="baan" id="baan" aria-hidden="true">
+                        <div class="baan-lijn"></div>
+                        <svg class="baan-vlag" viewBox="0 0 40 72"><line x1="6" y1="2" x2="6" y2="72" stroke="#1f2a1f" stroke-width="2.5"/><rect x="7" y="3" width="28" height="20" fill="#fff" stroke="#1f2a1f" stroke-width="1.5"/><path fill="#1f2a1f" d="M7 3h7v5H7zM21 3h7v5h-7zM14 8h7v5h-7zM28 8h7v5h-7zM7 13h7v5H7zM21 13h7v5h-7zM14 18h7v5h-7zM28 18h7v5h-7z"/></svg>
+                        <svg class="loper" id="loper" viewBox="0 0 70 94">
+                            <g class="lijf">
+                                <g transform="translate(33,50)"><g class="d d2"><line x1="0" y1="0" x2="0" y2="17" stroke="#d9a383" stroke-width="7" stroke-linecap="round"/><g transform="translate(0,17)"><g class="k k2"><line x1="0" y1="0" x2="0" y2="17" stroke="#d9a383" stroke-width="6" stroke-linecap="round"/><path d="M-3 15 h11 a3 3 0 0 1 0 6 h-11 z" fill="#3a3f47"/></g></g></g></g>
+                                <g transform="translate(37,28)"><g class="a a2"><line x1="0" y1="0" x2="0" y2="12" stroke="#c99373" stroke-width="5.5" stroke-linecap="round"/><line x1="0" y1="12" x2="8" y2="18" stroke="#c99373" stroke-width="5" stroke-linecap="round"/></g></g>
+                                <path d="M30 26 Q37 22 43 26 L41 50 L28 50 Z" fill="#2f9e44"/>
+                                <rect x="31" y="31" width="11" height="9" rx="1.5" fill="#fff"/>
+                                <text x="36.5" y="38" text-anchor="middle" font-size="5.2" font-weight="700" fill="#163a21" font-family="sans-serif">2040</text>
+                                <path d="M27 47 L42 47 L43 55 L35 55 L34 52 L33 55 L26 55 Z" fill="#3b82f6"/>
+                                <g transform="translate(33,50)"><g class="d d1"><line x1="0" y1="0" x2="0" y2="17" stroke="#e8b493" stroke-width="7" stroke-linecap="round"/><g transform="translate(0,17)"><g class="k k1"><line x1="0" y1="0" x2="0" y2="17" stroke="#e8b493" stroke-width="6" stroke-linecap="round"/><path d="M-3 15 h11 a3 3 0 0 1 0 6 h-11 z" fill="#e5484d"/></g></g></g></g>
+                                <rect x="36" y="22" width="6" height="6" rx="2" fill="#e8b493"/>
+                                <circle cx="40" cy="15" r="8" fill="#e8b493"/>
+                                <path d="M32 14 Q32 5 41 6 Q48 7 47 13 Q43 10 38 11 Q35 12 34 16 Z" fill="#5a3a22"/>
+                                <circle cx="44" cy="14.5" r="1" fill="#2a2a2a"/>
+                                <path d="M43 19 q2 1 3.5 -0.5" stroke="#8a4b3a" stroke-width="1" fill="none" stroke-linecap="round"/>
+                                <rect x="32.5" y="9" width="14" height="2.6" rx="1.3" fill="#f5c400"/>
+                                <g transform="translate(35,28)"><g class="a a1"><line x1="0" y1="0" x2="0" y2="12" stroke="#e8b493" stroke-width="5.5" stroke-linecap="round"/><line x1="0" y1="12" x2="8" y2="18" stroke="#e8b493" stroke-width="5" stroke-linecap="round"/><path d="M-3.5 -1 h7 v6 h-7 z" fill="#2f9e44"/></g></g>
+                                <circle class="zweet" cx="50" cy="10" r="1.8" fill="#3b82f6"/>
+                            </g>
+                        </svg>
+                    </div>
                 </div>
                 @endif
 
@@ -452,6 +476,34 @@
     .slinger .lamp.aan { animation: aangaan .45s ease-out; }
     @keyframes aangaan { 0% { transform: scale(.6); filter: brightness(2); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
 
+    /* Hardloper naar de finish (onder de slinger) */
+    .baan { position: relative; height: 62px; margin: 6px auto 0; --f: 0; }
+    .baan-lijn { position: absolute; left: 0; right: 30px; bottom: 4px; height: 2px; background: #c8cfc9; }
+    .baan-vlag { position: absolute; right: 2px; bottom: 4px; width: 26px; height: 46px; }
+    .loper { position: absolute; bottom: 1px; width: 43px; height: 58px; left: calc((100% - 30px - 43px) * var(--f)); transition: left .7s ease-out; --t: .62s; }
+    .loper.sprint { --t: .36s; }
+    .loper g.d, .loper g.k, .loper g.a, .loper g.lijf { transform-origin: 0 0; }
+    .loper .lijf { animation: wip calc(var(--t) / 2) ease-in-out infinite; }
+    .loper .d1 { animation: dij var(--t) linear infinite; }
+    .loper .d2 { animation: dij var(--t) linear infinite; animation-delay: calc(var(--t) / -2); }
+    .loper .k1 { animation: knie var(--t) linear infinite; }
+    .loper .k2 { animation: knie var(--t) linear infinite; animation-delay: calc(var(--t) / -2); }
+    .loper .a1 { animation: arm var(--t) ease-in-out infinite; animation-delay: calc(var(--t) / -2); }
+    .loper .a2 { animation: arm var(--t) ease-in-out infinite; }
+    .loper .zweet { opacity: 0; }
+    .loper.sprint .zweet { opacity: 1; animation: druppel .45s linear infinite; }
+    .loper.binnen .d1, .loper.binnen .d2, .loper.binnen .k1, .loper.binnen .k2, .loper.binnen .lijf { animation: none; }
+    .loper.binnen .a1, .loper.binnen .a2 { animation: none; transform: rotate(-165deg); }
+    .loper.binnen { animation: springen .55s ease-out 2; }
+    @keyframes dij { 0% { transform: rotate(-38deg); } 50% { transform: rotate(30deg); } 100% { transform: rotate(-38deg); } }
+    @keyframes knie { 0% { transform: rotate(8deg); } 35% { transform: rotate(12deg); } 55% { transform: rotate(55deg); } 75% { transform: rotate(95deg); } 100% { transform: rotate(8deg); } }
+    @keyframes arm { 0% { transform: rotate(-45deg); } 50% { transform: rotate(40deg); } 100% { transform: rotate(-45deg); } }
+    @keyframes wip { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+    @keyframes druppel { from { transform: translate(0, 0); opacity: 1; } to { transform: translate(-9px, 7px); opacity: 0; } }
+    @keyframes springen { 50% { transform: translateY(-12px); } }
+    @media (max-width: 520px) { .baan { height: 44px; margin-top: 4px; } .baan-vlag { width: 20px; height: 36px; } .loper { width: 31px; height: 42px; left: calc((100% - 30px - 31px) * var(--f)); } }
+    @media (prefers-reduced-motion: reduce) { .loper, .loper * { animation: none !important; transition: none; } }
+
     /* Vinkje in het nummerbolletje */
     .vraagnr.klaar { background: #2f8f3a !important; animation: omdraaien .4s ease-out; }
     @keyframes omdraaien { from { transform: rotateY(90deg); } to { transform: rotateY(0); } }
@@ -512,6 +564,8 @@
         var kaarten = Array.prototype.slice.call(form.querySelectorAll('.vraagkaart'));
         var tekst = document.getElementById('voortgang-tekst');
         var slinger = document.getElementById('slinger');
+        var baan = document.getElementById('baan');
+        var loper = document.getElementById('loper');
         var meldingen = Array.prototype.slice.call(form.querySelectorAll('.stop-melding'));
         var logo = document.querySelector('.topnav-logo img');
         // meer sprongvragen mogelijk (woonplaats-exit, "Nooit"); de eerste gekozen sprong telt
@@ -550,6 +604,7 @@
             slinger.innerHTML = '';
             // zo breed als de lampjes (max 16px per stuk), in het midden; op de telefoon de volle breedte
             slinger.style.maxWidth = (n * 16) + 'px';
+            if (baan) baan.style.maxWidth = slinger.style.maxWidth;
             for (var i = 0; i < n; i++) { var s = document.createElement('span'); s.className = 'lamp'; slinger.appendChild(s); }
         }
         function werkBij() {
@@ -595,7 +650,17 @@
                     nog.textContent = rest === 1 ? 'Laatste vraag' : 'Nog ' + rest + ' vragen';
                 }
             });
-            if (tekst) tekst.textContent = klaar + ' van ' + zichtbaar.length + ' vragen beantwoord';
+            // hardloper: schuift mee, sprint op het laatste stuk, springt bij de finish
+            // binnen = alle verplichte vragen beantwoord (open vragen mogen leeg blijven)
+            var rest = zichtbaar.length - klaar;
+            var openVerplicht = zichtbaar.filter(function (k) { return k.hasAttribute('data-verplicht') && !beantwoord(k); }).length;
+            var binnen = zichtbaar.length > 0 && openVerplicht === 0 && klaar >= zichtbaar.length / 2;
+            var sprint = !binnen && zichtbaar.length >= 16 && rest > 0 && rest <= 8;
+            if (baan) baan.style.setProperty('--f', binnen ? '1' : zichtbaar.length ? (klaar / zichtbaar.length).toFixed(3) : '0');
+            if (loper) { loper.classList.toggle('sprint', sprint); loper.classList.toggle('binnen', binnen); }
+            if (tekst) tekst.textContent = binnen ? 'Binnen! Nu nog op versturen drukken'
+                : sprint ? 'Laatste rechte stuk, nog ' + rest + (rest === 1 ? ' vraag' : ' vragen')
+                : klaar + ' van ' + zichtbaar.length + ' vragen beantwoord';
             bouwSlinger(zichtbaar.length);
             if (slinger) Array.prototype.forEach.call(slinger.children, function (l, i) { l.classList.toggle('aan', i < klaar); });
             var deel = zichtbaar.length ? klaar / zichtbaar.length : 0;
