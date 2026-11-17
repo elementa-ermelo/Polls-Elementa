@@ -250,7 +250,8 @@
                                     @php($oid = 'q'.$question->id.'_o'.$option->id)
                                     <div>
                                         @if($meer)
-                                        <input class="choice-inp" id="{{ $oid }}" type="checkbox"
+                                        {{-- "Geen van deze" / "Niets, ..." sluit de andere vinkjes uit --}}
+                                        <input class="choice-inp" id="{{ $oid }}" type="checkbox"@if(preg_match('/^(Geen|Niets)\b/u', $option->label)) data-alleen @endif
                                             name="question_{{ $question->id }}[]" value="{{ $option->id }}"
                                             @checked(in_array((string) $option->id, array_map('strval', (array) old('question_'.$question->id, [])), true))>
                                         @else
@@ -603,6 +604,14 @@
             b.addEventListener('click', function () { toch = true; werkBij(); });
         });
         form.addEventListener('change', function (e) {
+            // meerkeuze: "Geen van deze" haalt de andere vinkjes weg, en een ander vinkje haalt "Geen van deze" weg
+            var el = e.target;
+            if (el.type === 'checkbox' && el.checked) {
+                var kaart = el.closest('.vraagkaart');
+                kaart.querySelectorAll('input[type=checkbox]').forEach(function (c) {
+                    if (c !== el && (el.hasAttribute('data-alleen') || c.hasAttribute('data-alleen'))) c.checked = false;
+                });
+            }
             if (stopKaarten.some(function (k) { return k.contains(e.target); })) toch = false;
             werkBij();
         });
