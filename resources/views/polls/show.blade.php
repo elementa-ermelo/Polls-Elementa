@@ -26,7 +26,12 @@
     <div class="card" style="margin-bottom:24px; padding:24px; background:linear-gradient(135deg, var(--accent) 0%, #a7d8de 100%); color:#fff; border:none;">
         <h2 style="margin:0 0 12px; font-size:18px; font-weight:700; color:#fff;">Welkom bij deze vragenlijst</h2>
         <p style="margin:0 0 8px; line-height:1.6; font-size:15px; color:#fff;">
+            {{-- lange lijst: eerlijk over de duur (IJme, 17 nov) --}}
+            @if($poll->questions->count() >= 16)
+            Wij horen graag wat u ervan vindt. Het invullen kost even maar is de moeite waard. Lampjes en een hardloper begeleiden u.
+            @else
             Wij horen graag wat u ervan vindt. Het invullen kost een paar minuten.
+            @endif
         </p>
     </div>
 
