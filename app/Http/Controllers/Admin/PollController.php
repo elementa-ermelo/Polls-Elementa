@@ -574,6 +574,7 @@ HTML;
                 'met_toelichting' => request()->boolean('met_toelichting'),
                 'groep' => trim((string) request()->input('groep', '')) ?: null,
                 'kort' => trim((string) request()->input('kort', '')) ?: null,
+                'groep_uitleg' => trim((string) request()->input('groep_uitleg', '')) ?: null,
                 'type' => $data['type'],
                 'position' => $position + 1,
             ]);
@@ -649,6 +650,7 @@ HTML;
                 'met_toelichting' => request()->boolean('met_toelichting'),
                 'groep' => trim((string) request()->input('groep', '')) ?: null,
                 'kort' => trim((string) request()->input('kort', '')) ?: null,
+                'groep_uitleg' => trim((string) request()->input('groep_uitleg', '')) ?: null,
                 'type' => $data['type'],
             ]);
 

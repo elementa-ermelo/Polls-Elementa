@@ -259,6 +259,9 @@
                         <h3>{{ $groep }}</h3>
                         <span class="nog-vragen" hidden></span>
                     </div>
+                    @if($question->groep_uitleg)
+                        <p class="kaart-uitleg">{{ $question->groep_uitleg }}</p>
+                    @endif
                 @endif
                 <div class="{{ $groep ? 'vraagkaart in-groep' : 'card vraagkaart' }}{{ $mist ? ' mist' : '' }}"@if($groep) data-in-groep="{{ $groepId }}"@endif @if(! \App\Support\PollType::isOpenTextType($question->type) && ! $question->standaard_antwoord) data-verplicht @endif data-vraag="{{ $question->id }}" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif @if($vervolgOptie) data-vervolg-bij="q{{ $question->id }}_o{{ $vervolgOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
@@ -566,6 +569,7 @@
     .themakaart.overgeslagen { display: none; }
     .themakaart .kaartkop { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
     .themakaart .kaartkop h3 { margin: 0; font-size: 18px; line-height: 1.3; }
+    .themakaart .kaart-uitleg { margin: 4px 0 4px 38px; font-size: 14px; line-height: 1.5; color: var(--muted); }
     .vraagkaart.in-groep { margin: 0 !important; padding: 16px 0 6px !important; border-top: 1px solid var(--line); }
     .kaartkop + .vraagkaart.in-groep { border-top: 0; }
     .vraagkaart.in-groep ~ .vraagkaart.in-groep .score-hint { display: none; } /* uitleg 1-10 alleen bij de eerste regel */

@@ -34,6 +34,11 @@
         <input id="kort" name="kort" maxlength="255" value="{{ old('kort', $question->kort ?? '') }}" placeholder="Bijvoorbeeld: Gezelligheid">
         <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Leeg: op de kaart staat de hele vraag.</p>
     </div>
+    <div class="field">
+        <label for="groep_uitleg">Uitleg onder de kaarttitel <span style="font-weight:400; color:var(--muted);">(optioneel)</span></label>
+        <input id="groep_uitleg" name="groep_uitleg" maxlength="255" value="{{ old('groep_uitleg', $question->groep_uitleg ?? '') }}" placeholder="Bijvoorbeeld: Heeft u nog puf? Hier is ruimte voor uw eigen woorden.">
+        <p style="font-size:12px; color:var(--muted); margin:6px 0 0;">Alleen bij de eerste vraag van een themakaart; staat klein onder de titel.</p>
+    </div>
 
     <div class="field">
         <input type="hidden" name="met_toelichting" value="0">
