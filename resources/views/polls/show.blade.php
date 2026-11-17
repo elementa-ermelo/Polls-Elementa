@@ -205,7 +205,7 @@
 
                 @if($poll->questions->count() > 5)
                 <div class="voortgang" id="voortgang" aria-live="polite">
-                    <span id="voortgang-tekst">0 van {{ $poll->questions->count() }} vragen beantwoord</span>
+                    <span id="voortgang-tekst">0 van {{ $heeftGroepen ? $kaartAantal.' kaarten' : $poll->questions->count().' vragen' }} beantwoord</span>
                     <div class="slinger" id="slinger" aria-hidden="true"></div>
                     {{-- hardloper met startnummer 2040 die naar de finish loopt; sprint op het laatste stuk (IJme, 17 nov) --}}
                     <div class="baan" id="baan" aria-hidden="true">
@@ -640,6 +640,9 @@
         var logo = document.querySelector('.topnav-logo img');
         // meer sprongvragen mogelijk (woonplaats-exit, "Nooit"); de eerste gekozen sprong telt
         var stopKaarten = Array.prototype.slice.call(form.querySelectorAll('.vraagkaart[data-stop-optie]'));
+        // met themakaarten tellen we in kaarten, anders in vragen (IJme: "1 van 17 kaarten beantwoord")
+        var metKaarten = !!form.querySelector('.themakaart');
+        var enkel = metKaarten ? 'kaart' : 'vraag', meervoud = metKaarten ? 'kaarten' : 'vragen';
         var toch = false, half = false, heel = false, eerste = true;
 
         function beantwoord(k) {
@@ -728,7 +731,7 @@
                 if (nog) {
                     var rest = eenheden.length - j;
                     nog.hidden = j < Math.floor(eenheden.length / 2);
-                    nog.textContent = rest === 1 ? 'Laatste vraag' : 'Nog ' + rest + ' vragen';
+                    nog.textContent = rest === 1 ? 'Laatste ' + enkel : 'Nog ' + rest + ' ' + meervoud;
                 }
             });
             // hardloper: schuift mee, sprint op het laatste stuk, springt bij de finish
@@ -741,8 +744,8 @@
             if (baan) baan.style.setProperty('--f', binnen ? '1' : aantal ? (klaar / aantal).toFixed(3) : '0');
             if (loper) { loper.classList.toggle('sprint', sprint); loper.classList.toggle('binnen', binnen); }
             if (tekst) tekst.textContent = binnen ? 'Binnen! Nu nog op versturen drukken'
-                : sprint ? 'Laatste rechte stuk, nog ' + rest + (rest === 1 ? ' vraag' : ' vragen')
-                : klaar + ' van ' + aantal + ' vragen beantwoord';
+                : sprint ? 'Laatste rechte stuk, nog ' + rest + ' ' + (rest === 1 ? enkel : meervoud)
+                : klaar + ' van ' + aantal + ' ' + meervoud + ' beantwoord';
             bouwSlinger(aantal);
             if (slinger) Array.prototype.forEach.call(slinger.children, function (l, i) { l.classList.toggle('aan', i < klaar); });
             var deel = aantal ? klaar / aantal : 0;
