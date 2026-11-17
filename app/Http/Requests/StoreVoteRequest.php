@@ -50,9 +50,25 @@ class StoreVoteRequest extends FormRequest
         return $rules;
     }
 
+    /** Welke velden ontbraken (zonder inhoud), om te zien of de pagina en de server het eens zijn. */
+    protected function failedValidation(\Illuminate\Contracts\Validation\Validator $validator): void
+    {
+        \Log::info('Vragenlijst onvolledig verstuurd', [
+            'poll_id' => $this->route('poll')?->id,
+            'velden'  => array_keys($validator->errors()->messages()),
+        ]);
+        parent::failedValidation($validator);
+    }
+
     public function messages(): array
     {
-        return [
+        // de melding bovenaan noemt de vraag zelf (nummers verschuiven door sprongen)
+        $perVraag = [];
+        foreach ($this->route('poll')->questions as $q) {
+            $perVraag["question_{$q->id}.required"] = 'Nog niet beantwoord: "' . $q->question . '"';
+        }
+
+        return $perVraag + [
             'open_answer.required' => 'Vul een antwoord in bij deze open poll.',
             '*.required' => 'Dit antwoord is verplicht.',
             '*.exists' => 'Deze optie bestaat niet.',

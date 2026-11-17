@@ -199,7 +199,8 @@
                 @php($stopOptie = $question->stop_bij ? $question->options->firstWhere('label', $question->stop_bij) : null)
                 @php($overOptie = $question->overslaan_bij ? $question->options->firstWhere('label', $question->overslaan_bij) : null)
                 @php($vervolgOptie = $question->vervolg_bij ? $question->options->firstWhere('label', $question->vervolg_bij) : null)
-                <div class="card vraagkaart" data-vraag="{{ $question->id }}" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif @if($vervolgOptie) data-vervolg-bij="q{{ $question->id }}_o{{ $vervolgOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
+                @php($mist = $errors->has('question_'.$question->id) || $errors->has('question_'.$question->id.'.*'))
+                <div class="card vraagkaart{{ $mist ? ' mist' : '' }}"@if(! \App\Support\PollType::isOpenTextType($question->type) && ! $question->standaard_antwoord) data-verplicht @endif data-vraag="{{ $question->id }}" data-pos="{{ $question->position }}"@if($stopOptie) data-stop-optie="q{{ $question->id }}_o{{ $stopOptie->id }}"@endif @if($overOptie) data-sla-over="q{{ $question->id }}_o{{ $overOptie->id }}"@endif @if($vervolgOptie) data-vervolg-bij="q{{ $question->id }}_o{{ $vervolgOptie->id }}"@endif style="margin-bottom:16px; padding:20px;">
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
                         <div class="vraagnr" data-nr="{{ $index+1 }}" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
                         <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $question->question }}</h3>
@@ -289,9 +290,8 @@
                         @endif
                     @endif
 
-                    @error('question_'.$question->id)
-                        <p class="vote-err" style="margin-top:10px;">Dit antwoord is verplicht.</p>
-                    @enderror
+                    {{-- zichtbaar zodra de kaart .mist heeft (na de controle bij versturen of een serverfout) --}}
+                    <p class="vote-err mist-tekst" style="margin-top:12px;">Deze vraag is nog niet beantwoord.</p>
                 </div>
                 @if($stopOptie)
                 <div class="card stop-melding" data-voor="{{ $question->id }}" hidden>
@@ -342,6 +342,9 @@
 
     <style>
     .vote-err { color: var(--danger); font-size: 13px; margin: 6px 0 0; font-weight: 600; }
+    .vraagkaart .mist-tekst { display: none; font-size: 15px; }
+    .vraagkaart.mist { border: 2px solid var(--danger); }
+    .vraagkaart.mist .mist-tekst { display: block; }
 
     /* Radio keuze */
     .choice-grid {
@@ -579,6 +582,7 @@
                 // doorlopend nummeren over de zichtbare vragen (na een sprong geen gat in de nummers)
                 nr.setAttribute('data-nr', String(j + 1));
                 if (nr.classList.contains('klaar') !== ja) nr.classList.toggle('klaar', ja);
+                if (ja) k.classList.remove('mist');
                 nr.textContent = ja ? '\u2713' : String(j + 1);
                 // toelichting verschijnt zodra er een antwoord is (niet meer openklikken)
                 var t = k.querySelector('.toelichting');
@@ -616,6 +620,16 @@
             werkBij();
         });
         form.addEventListener('input', werkBij);
+        form.addEventListener('submit', function (e) {
+            werkBij();
+            var open = kaarten.filter(function (k) {
+                return !k.classList.contains('overgeslagen') && k.hasAttribute('data-verplicht') && !beantwoord(k);
+            });
+            kaarten.forEach(function (k) { k.classList.toggle('mist', open.indexOf(k) >= 0); });
+            if (!open.length) return;
+            e.preventDefault();
+            window.scrollTo(0, open[0].getBoundingClientRect().top + window.scrollY - 140);
+        });
         werkBij();
     })();
     </script>
@@ -625,7 +639,10 @@
     // Scroll to top when page loads if there's a success or error message
     document.addEventListener('DOMContentLoaded', () => {
         const flashElement = document.querySelector('.flash');
-        if (flashElement) {
+        const mistKaart = document.querySelector('.vraagkaart.mist');
+        if (mistKaart) {
+            window.scrollTo(0, mistKaart.getBoundingClientRect().top + window.scrollY - 140);
+        } else if (flashElement) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     });
