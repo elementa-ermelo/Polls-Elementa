@@ -70,9 +70,7 @@
             <strong>3. Versturen.</strong> Uw antwoorden tellen direct mee.
         </p>
         @endif
-        <p style="margin:0; color:#1e40af; font-size:13px; opacity:0.9; font-style:italic;">
-            Bedankt voor uw medewerking.
-        </p>
+        {{-- geen los bedankje meer: punt 2 zegt al "dank u wel alvast" (IJme, 17 nov) --}}
     </div>
 
     {{-- Poll header --}}
