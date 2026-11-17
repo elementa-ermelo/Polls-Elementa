@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Centrumenquête delen · Centrum Ermelo</title>
+<style>
+:root { --donker: #163a21; --groen: #2e8b3a; --lime: #d4e02a; --creme: #f5f6ec; --lijn: #dde3de; --tekst: #1f2a1f; --zacht: #5a6b5d; }
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Ubuntu, "Helvetica Neue", Arial, sans-serif; color: var(--tekst); background: var(--creme); line-height: 1.5; }
+header { background: var(--donker); color: #fff; padding: 0 16px 40px; position: relative; overflow: hidden; }
+.slinger { display: block; width: 100%; height: 90px; }
+.binnen { max-width: 1040px; margin: 0 auto; }
+header .label { color: var(--lime); font-weight: 700; letter-spacing: .05em; font-size: 14px; margin-top: 10px; }
+header h1 { font-size: clamp(30px, 6vw, 52px); line-height: 1.05; margin: 10px 0 14px; }
+header p { max-width: 640px; font-size: 18px; color: #dfe7df; margin: 0 0 22px; }
+.knop, .kopieer { display: inline-block; border: 0; border-radius: 10px; padding: 11px 16px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; }
+.knop { background: var(--groen); color: #fff; }
+.knop.groot { background: var(--lime); color: var(--donker); font-size: 17px; padding: 14px 22px; }
+.kopieer { background: #fff; color: var(--donker); box-shadow: inset 0 0 0 2px var(--lijn); }
+.kopieer.klaar { box-shadow: inset 0 0 0 2px var(--groen); color: var(--groen); }
+main { padding: 8px 16px 48px; }
+section { margin-top: 40px; }
+section > h2 { font-size: 26px; margin: 0 0 6px; }
+section > p { color: var(--zacht); margin: 0 0 18px; max-width: 720px; }
+.links { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.links li { background: #fff; border-radius: 12px; padding: 12px 14px; display: grid; grid-template-columns: 210px minmax(0, 1fr) auto; gap: 12px; align-items: center; box-shadow: 0 4px 14px rgba(22,58,33,.07); }
+.links code { font-size: 14px; overflow-wrap: anywhere; color: var(--zacht); }
+.raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 22px; }
+.raster.stories { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.item { background: #fff; border-radius: 16px; padding: 14px; box-shadow: 0 8px 24px rgba(22,58,33,.10); display: flex; flex-direction: column; }
+.item img { width: 100%; height: auto; border-radius: 10px; display: block; background: var(--creme); }
+.item h3 { font-size: 17px; margin: 14px 0 6px; }
+.bijschrift { font-size: 14px; color: var(--zacht); margin: 0 0 14px; flex: 1; white-space: pre-line; }
+.knoppen { display: flex; flex-wrap: wrap; gap: 8px; }
+footer { text-align: center; padding: 30px 16px 50px; color: var(--zacht); font-size: 14px; }
+footer img { height: 64px; display: block; margin: 0 auto 10px; }
+@media (max-width: 640px) { .links li { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <svg class="slinger" viewBox="0 0 960 110" preserveAspectRatio="none" aria-hidden="true"><defs><filter id="g" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="M -10 20 Q 480.0 80 970 20" fill="none" stroke="#9aa59c" stroke-width="2"/><rect x="16.0" y="22.4" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="20.0" cy="41.4" rx="8.5" ry="12" fill="#f5c400" filter="url(#g)"/><rect x="56.0" y="27.0" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="60.0" cy="46.0" rx="8.5" ry="12" fill="#e5484d" filter="url(#g)"/><rect x="96.0" y="31.2" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="100.0" cy="50.2" rx="8.5" ry="12" fill="#2f9e44" filter="url(#g)"/><rect x="136.0" y="34.9" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="140.0" cy="53.9" rx="8.5" ry="12" fill="#3b82f6" filter="url(#g)"/><rect x="176.0" y="38.3" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="180.0" cy="57.3" rx="8.5" ry="12" fill="#f5c400" filter="url(#g)"/><rect x="216.0" y="41.2" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="220.0" cy="60.2" rx="8.5" ry="12" fill="#e5484d" filter="url(#g)"/><rect x="256.0" y="43.7" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="260.0" cy="62.7" rx="8.5" ry="12" fill="#2f9e44" filter="url(#g)"/><rect x="296.0" y="45.8" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="300.0" cy="64.8" rx="8.5" ry="12" fill="#3b82f6" filter="url(#g)"/><rect x="336.0" y="47.4" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="340.0" cy="66.4" rx="8.5" ry="12" fill="#f5c400" filter="url(#g)"/><rect x="376.0" y="48.7" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="380.0" cy="67.7" rx="8.5" ry="12" fill="#e5484d" filter="url(#g)"/><rect x="416.0" y="49.5" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="420.0" cy="68.5" rx="8.5" ry="12" fill="#2f9e44" filter="url(#g)"/><rect x="456.0" y="49.9" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="460.0" cy="68.9" rx="8.5" ry="12" fill="#3b82f6" filter="url(#g)"/><rect x="496.0" y="49.9" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="500.0" cy="68.9" rx="8.5" ry="12" fill="#f5c400" filter="url(#g)"/><rect x="536.0" y="49.5" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="540.0" cy="68.5" rx="8.5" ry="12" fill="#e5484d" filter="url(#g)"/><rect x="576.0" y="48.7" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="580.0" cy="67.7" rx="8.5" ry="12" fill="#2f9e44" filter="url(#g)"/><rect x="616.0" y="47.4" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="620.0" cy="66.4" rx="8.5" ry="12" fill="#3b82f6" filter="url(#g)"/><rect x="656.0" y="45.8" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="660.0" cy="64.8" rx="8.5" ry="12" fill="#f5c400" filter="url(#g)"/><rect x="696.0" y="43.7" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="700.0" cy="62.7" rx="8.5" ry="12" fill="#e5484d" filter="url(#g)"/><rect x="736.0" y="41.2" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="740.0" cy="60.2" rx="8.5" ry="12" fill="#2f9e44" filter="url(#g)"/><rect x="776.0" y="38.3" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="780.0" cy="57.3" rx="8.5" ry="12" fill="#3b82f6" filter="url(#g)"/><rect x="816.0" y="34.9" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="820.0" cy="53.9" rx="8.5" ry="12" fill="#f5c400" filter="url(#g)"/><rect x="856.0" y="31.2" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="860.0" cy="50.2" rx="8.5" ry="12" fill="#e5484d" filter="url(#g)"/><rect x="896.0" y="27.0" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="900.0" cy="46.0" rx="8.5" ry="12" fill="#2f9e44" filter="url(#g)"/><rect x="936.0" y="22.4" width="8" height="8" rx="1.5" fill="#5b665d"/><ellipse cx="940.0" cy="41.4" rx="8.5" ry="12" fill="#3b82f6" filter="url(#g)"/></svg>
+  <div class="binnen">
+    <div class="label">CENTRUMENQUÊTE ERMELO</div>
+    <h1>Help de centrumenquête verspreiden</h1>
+    <p>Ondernemers in het dorp willen weten wat inwoners en bezoekers van het centrum vinden. Deel de vragenlijst in uw winkel, op social media of in uw nieuwsbrief. Alles op deze pagina mag u vrij gebruiken.</p>
+    <a class="knop groot" href="centrumenquete-materiaal.zip" download>Alles downloaden (zip, 2,4 MB)</a>
+  </div>
+</header>
+<main class="binnen">
+  <section>
+    <h2>De link om te delen</h2>
+    <p>Elk kanaal een eigen link. Zo ziet Centrum Ermelo waar de invullers vandaan komen. De vragenlijst staat open tot en met 15 december.</p>
+    <ul class="links"><li><span>Facebook</span><code>https://polls.elementa.com/polls/centrum-enquete?bron=facebook</code><button type="button" class="kopieer" data-tekst="https://polls.elementa.com/polls/centrum-enquete?bron=facebook">Kopieer</button></li><li><span>Instagram (bio of linksticker)</span><code>https://polls.elementa.com/polls/centrum-enquete?bron=instagram</code><button type="button" class="kopieer" data-tekst="https://polls.elementa.com/polls/centrum-enquete?bron=instagram">Kopieer</button></li><li><span>WhatsApp</span><code>https://polls.elementa.com/polls/centrum-enquete?bron=whatsapp</code><button type="button" class="kopieer" data-tekst="https://polls.elementa.com/polls/centrum-enquete?bron=whatsapp">Kopieer</button></li><li><span>Website of nieuwsbrief</span><code>https://polls.elementa.com/polls/centrum-enquete?bron=website</code><button type="button" class="kopieer" data-tekst="https://polls.elementa.com/polls/centrum-enquete?bron=website">Kopieer</button></li></ul>
+  </section>
+  <section>
+    <h2>Posts</h2>
+    <p>Voor Facebook en Instagram (1080 x 1350). Met "Kopieer tekst" kopieert u het bijschrift met de link erbij.</p>
+    <div class="raster">
+      <article class="item">
+        <img src="klein/post-1-ermelo-2040.jpg" alt="Post 1: Hoe wil Ermelo zijn in 2040?" width="540" height="675" loading="lazy">
+        <h3>Post 1. Hoe wil Ermelo zijn in 2040?</h3>
+        <p class="bijschrift">Hoe wil Ermelo zijn in 2040? Om dat te weten vragen we u wat u er nu van vindt.
+Ondernemers willen graag weten wat u van het centrum vindt. Vult u de vragenlijst ook in? Dat kan tot en met 15 december. Uw naam en e-mailadres worden niet gevraagd.</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-post-1-ermelo-2040.png" download>Download afbeelding</a><button type="button" class="kopieer" data-tekst="Hoe wil Ermelo zijn in 2040? Om dat te weten vragen we u wat u er nu van vindt.
+Ondernemers willen graag weten wat u van het centrum vindt. Vult u de vragenlijst ook in? Dat kan tot en met 15 december. Uw naam en e-mailadres worden niet gevraagd.
+https://polls.elementa.com/polls/centrum-enquete?bron=facebook">Kopieer tekst</button></div>
+      </article>
+      <article class="item">
+        <img src="klein/post-2-cijfer-gezelligheid.jpg" alt="Post 2: Welk cijfer geeft u de gezelligheid?" width="540" height="675" loading="lazy">
+        <h3>Post 2. Welk cijfer geeft u de gezelligheid?</h3>
+        <p class="bijschrift">Welk cijfer geeft u de gezelligheid van het centrum? En de bereikbaarheid, het parkeren, de horeca? In de centrumenquête geeft u bij vijftien onderwerpen een cijfer. Bij elke ingevulde kaart gaat er een lampje van de slinger branden.</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-post-2-cijfer-gezelligheid.png" download>Download afbeelding</a><button type="button" class="kopieer" data-tekst="Welk cijfer geeft u de gezelligheid van het centrum? En de bereikbaarheid, het parkeren, de horeca? In de centrumenquête geeft u bij vijftien onderwerpen een cijfer. Bij elke ingevulde kaart gaat er een lampje van de slinger branden.
+https://polls.elementa.com/polls/centrum-enquete?bron=facebook">Kopieer tekst</button></div>
+      </article>
+      <article class="item">
+        <img src="klein/post-3-vaker-naar-het-centrum.jpg" alt="Post 3: Wat brengt u vaker naar het centrum?" width="540" height="675" loading="lazy">
+        <h3>Post 3. Wat brengt u vaker naar het centrum?</h3>
+        <p class="bijschrift">Koopavonden, winkels op zondag, meer markten? Vink aan wat u vaker naar het centrum laat komen. Uw input levert materiaal op om plannen te maken voor de toekomst.</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-post-3-vaker-naar-het-centrum.png" download>Download afbeelding</a><button type="button" class="kopieer" data-tekst="Koopavonden, winkels op zondag, meer markten? Vink aan wat u vaker naar het centrum laat komen. Uw input levert materiaal op om plannen te maken voor de toekomst.
+https://polls.elementa.com/polls/centrum-enquete?bron=facebook">Kopieer tekst</button></div>
+      </article>
+      <article class="item">
+        <img src="klein/post-4-waarom.jpg" alt="Post 4: Waarom we het vragen" width="540" height="675" loading="lazy">
+        <h3>Post 4. Waarom we het vragen</h3>
+        <p class="bijschrift">De ondernemers in het centrum willen weten wat u ervan vindt, wat zijn de sterke en zwakke punten. Er spelen allerlei zaken: de fietsen op het middenterrein van de Stationsstraat, vrachtverkeer, het parkeren op het Raadhuisplein, de leegstand. Om daar goede keuzes in te maken is het nodig dat het dorp meedenkt. Centrum Ermelo deelt na 15 december de uitslag.</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-post-4-waarom.png" download>Download afbeelding</a><button type="button" class="kopieer" data-tekst="De ondernemers in het centrum willen weten wat u ervan vindt, wat zijn de sterke en zwakke punten. Er spelen allerlei zaken: de fietsen op het middenterrein van de Stationsstraat, vrachtverkeer, het parkeren op het Raadhuisplein, de leegstand. Om daar goede keuzes in te maken is het nodig dat het dorp meedenkt. Centrum Ermelo deelt na 15 december de uitslag.
+https://polls.elementa.com/polls/centrum-enquete?bron=facebook">Kopieer tekst</button></div>
+      </article>
+      <article class="item">
+        <img src="klein/post-5-goed-om-te-weten.jpg" alt="Post 5: Goed om te weten" width="540" height="675" loading="lazy">
+        <h3>Post 5. Goed om te weten</h3>
+        <p class="bijschrift">De centrumenquête is anoniem. Met z&#x27;n drieën thuis en maar één tablet? Op één apparaat kunnen drie mensen uit hetzelfde huis de vragenlijst invullen. Komt u nooit in het centrum, dan bent u na twee vragen klaar. Open tot en met 15 december.</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-post-5-goed-om-te-weten.png" download>Download afbeelding</a><button type="button" class="kopieer" data-tekst="De centrumenquête is anoniem. Met z&#x27;n drieën thuis en maar één tablet? Op één apparaat kunnen drie mensen uit hetzelfde huis de vragenlijst invullen. Komt u nooit in het centrum, dan bent u na twee vragen klaar. Open tot en met 15 december.
+https://polls.elementa.com/polls/centrum-enquete?bron=facebook">Kopieer tekst</button></div>
+      </article>
+      <article class="item">
+        <img src="klein/post-6-ondernemers-vragen-het-u.jpg" alt="Post 6: Wat vindt u van het centrum? Voor ondernemers om zelf te delen" width="540" height="675" loading="lazy">
+        <h3>Post 6. Wat vindt u van het centrum? Voor ondernemers om zelf te delen</h3>
+        <p class="bijschrift">Wij doen mee aan de centrumenquête van Centrum Ermelo en zijn benieuwd wat u van het centrum vindt. Vul de vragenlijst in, dan weten wij wat we moeten aanpakken.</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-post-6-ondernemers-vragen-het-u.png" download>Download afbeelding</a><button type="button" class="kopieer" data-tekst="Wij doen mee aan de centrumenquête van Centrum Ermelo en zijn benieuwd wat u van het centrum vindt. Vul de vragenlijst in, dan weten wij wat we moeten aanpakken.
+https://polls.elementa.com/polls/centrum-enquete?bron=facebook">Kopieer tekst</button></div>
+      </article></div>
+  </section>
+  <section>
+    <h2>Stories</h2>
+    <p>Voor Instagram en Facebook (1080 x 1920). Zet de linksticker met de link op de plek van polls.elementa.com.</p>
+    <div class="raster stories">
+      <article class="item story">
+        <img src="klein/story-1-ermelo-2040.jpg" alt="Story: Hoe wil Ermelo zijn in 2040?" width="360" height="640" loading="lazy">
+        <h3>Hoe wil Ermelo zijn in 2040?</h3>
+        <p class="bijschrift">Linksticker onderin, op polls.elementa.com</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-story-1-ermelo-2040.png" download>Download</a></div>
+      </article>
+      <article class="item story">
+        <img src="klein/story-2-feestverlichting.jpg" alt="Story: De feestverlichting" width="360" height="640" loading="lazy">
+        <h3>De feestverlichting</h3>
+        <p class="bijschrift">Werkt goed met de sticker &quot;Wat vindt u ervan?&quot;</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-story-2-feestverlichting.png" download>Download</a></div>
+      </article>
+      <article class="item story">
+        <img src="klein/story-3-vrijdagmarkt.jpg" alt="Story: De vrijdagmarkt" width="360" height="640" loading="lazy">
+        <h3>De vrijdagmarkt</h3>
+        <p class="bijschrift">Eventueel de poll-sticker over de vraag heen</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-story-3-vrijdagmarkt.png" download>Download</a></div>
+      </article>
+      <article class="item story">
+        <img src="klein/story-4-link.jpg" alt="Story: Laat de hele slinger branden" width="360" height="640" loading="lazy">
+        <h3>Laat de hele slinger branden</h3>
+        <p class="bijschrift">Linksticker op het donkere vlak</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-story-4-link.png" download>Download</a></div>
+      </article></div>
+  </section>
+  <section>
+    <h2>Flyer, header en persbericht</h2>
+    <div class="raster">
+      <article class="item">
+        <img src="klein/flyer-a5.jpg" alt="Flyer A5" loading="lazy">
+        <h3>Flyer A5</h3>
+        <p class="bijschrift">Voor- en achterkant, met QR-code. Te printen op A5 of op A4 en doormidden snijden.</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-flyer-a5.pdf" download>Download (0,5 MB)</a></div>
+      </article>
+      <article class="item">
+        <img src="klein/header.jpg" alt="Header voor een website of nieuwsbericht" loading="lazy">
+        <h3>Header voor een website of nieuwsbericht</h3>
+        <p class="bijschrift">1600 x 1000 pixels, met QR-code</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-header.jpg" download>Download (0,2 MB)</a></div>
+      </article>
+      <article class="item">
+        <img src="klein/persbericht.jpg" alt="Persbericht" loading="lazy">
+        <h3>Persbericht</h3>
+        <p class="bijschrift">Eén A4, voor redacties</p>
+        <div class="knoppen"><a class="knop" href="centrumenquete-persbericht.pdf" download>Download (0,2 MB)</a></div>
+      </article></div>
+  </section>
+</main>
+<footer>
+  <img src="klein/logo.jpg" alt="Centrum Ermelo">
+  Centrumenquête Ermelo · open tot en met 15 december · <a href="https://polls.elementa.com/polls/centrum-enquete">naar de vragenlijst</a>
+</footer>
+<script>
+document.querySelectorAll('.kopieer').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var t = b.getAttribute('data-tekst'), oud = b.textContent;
+    function klaar() { b.textContent = 'Gekopieerd'; b.classList.add('klaar'); setTimeout(function () { b.textContent = oud; b.classList.remove('klaar'); }, 1800); }
+    if (navigator.clipboard) { navigator.clipboard.writeText(t).then(klaar); }
+    else { var a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); klaar(); }
+  });
+});
+</script>
+</body>
+</html>
