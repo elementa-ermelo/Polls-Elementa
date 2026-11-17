@@ -203,7 +203,11 @@
                     <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px;">
                         <div class="vraagnr" data-nr="{{ $index+1 }}" style="width:28px; height:28px; border-radius:50%; background:var(--accent); color:#fff; font-size:13px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0;">{{ $index+1 }}</div>
                         <h3 style="margin:0; font-size:17px; line-height:1.3;">{{ $question->question }}</h3>
+                        <span class="nog-vragen" hidden></span>
                     </div>
+                    @if(\App\Support\PollType::isMultiple($question->type))
+                        <p style="margin:-8px 0 14px 38px; font-size:14px; color:var(--muted); line-height:1.5;">U kunt meer antwoorden aanvinken.</p>
+                    @endif
                     @if($question->help_text)
                         <p style="margin:-8px 0 14px 38px; font-size:14px; color:var(--muted); line-height:1.5; white-space:pre-line;">{{ $question->help_text }}</p>
                     @elseif($question->standaard_antwoord)
@@ -241,12 +245,19 @@
                         @php($cMax = $isScore ? (int) $cijfers->max(fn ($o) => (int) $o->label) : 1)
                         <div class="choice-grid{{ $isScore ? ' choice-grid--score' : ' choice-grid--kol' }}" style="{{ $isScore ? '--n: '.$cijfers->count().';' : '--kol: '.$kol.';' }}">
                             @if($question->options && $question->options->count() > 0)
+                                @php($meer = \App\Support\PollType::isMultiple($question->type))
                                 @foreach($isScore ? $cijfers : $question->options as $option)
                                     @php($oid = 'q'.$question->id.'_o'.$option->id)
                                     <div>
+                                        @if($meer)
+                                        <input class="choice-inp" id="{{ $oid }}" type="checkbox"
+                                            name="question_{{ $question->id }}[]" value="{{ $option->id }}"
+                                            @checked(in_array((string) $option->id, array_map('strval', (array) old('question_'.$question->id, [])), true))>
+                                        @else
                                         <input class="choice-inp" id="{{ $oid }}" type="radio"
                                             name="question_{{ $question->id }}" value="{{ $option->id }}"
                                             @checked((string) old('question_'.$question->id) === (string) $option->id)>
+                                        @endif
                                         <label class="choice-lbl" for="{{ $oid }}"@if($isScore) style="--kleur: hsl({{ $cMax > $cMin ? round(((int) $option->label - $cMin) / ($cMax - $cMin) * 120) : 120 }}, 62%, 42%);"@endif>{{ $option->label }}</label>
                                     </div>
                                 @endforeach
@@ -270,10 +281,10 @@
                         @endif
                         @if($question->met_toelichting)
                             @php($tk = 'toelichting_'.$question->id)
-                            <details class="toelichting" @if(old($tk)) open @endif>
-                                <summary>Wilt u dit toelichten?</summary>
-                                <textarea name="{{ $tk }}" rows="3" maxlength="2000" placeholder="Niet verplicht">{{ old($tk) }}</textarea>
-                            </details>
+                            <div class="toelichting" @unless(old($tk)) hidden @endunless>
+                                <label for="{{ $tk }}">Wilt u dit toelichten? <span>Mag leeg blijven.</span></label>
+                                <textarea id="{{ $tk }}" name="{{ $tk }}" rows="2" maxlength="2000" placeholder="Uw toelichting">{{ old($tk) }}</textarea>
+                            </div>
                         @endif
                     @endif
 
@@ -404,9 +415,12 @@
 
     .lokveld { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
     .score-weetniet { margin-top: 8px; }
-    .toelichting { margin-top: 10px; }
-    .toelichting summary { cursor: pointer; font-size: 14px; color: var(--primary); }
-    .toelichting textarea { margin-top: 8px; width: 100%; resize: vertical; }
+    .toelichting { margin-top: 14px; animation: inschuiven .25s ease-out; }
+    .toelichting label { display: block; font-size: 15px; font-weight: 600; color: var(--primary); }
+    .toelichting label span { font-weight: 400; font-size: 13px; color: var(--muted); }
+    .toelichting textarea { margin-top: 6px; width: 100%; resize: vertical; }
+    @keyframes inschuiven { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+    .nog-vragen { margin-left: auto; padding-left: 8px; font-size: 13px; color: var(--muted); white-space: nowrap; }
     .score-weetniet .choice-lbl { padding: 8px 16px; font-size: 14px; font-weight: 500; color: var(--muted); }
 
     /* Voortgang */
@@ -503,7 +517,7 @@
         function beantwoord(k) {
             var ja = false;
             k.querySelectorAll('[name^="question_"]').forEach(function (el) {
-                if ((el.type === 'radio' && el.checked) || (el.tagName === 'TEXTAREA' && el.value.trim() !== '')) ja = true;
+                if (((el.type === 'radio' || el.type === 'checkbox') && el.checked) || (el.tagName === 'TEXTAREA' && el.value.trim() !== '')) ja = true;
             });
             return ja;
         }
@@ -565,6 +579,16 @@
                 nr.setAttribute('data-nr', String(j + 1));
                 if (nr.classList.contains('klaar') !== ja) nr.classList.toggle('klaar', ja);
                 nr.textContent = ja ? '\u2713' : String(j + 1);
+                // toelichting verschijnt zodra er een antwoord is (niet meer openklikken)
+                var t = k.querySelector('.toelichting');
+                if (t && t.hidden && ja) t.hidden = false;
+                // vanaf de helft: hoeveel vragen er nog komen
+                var nog = k.querySelector('.nog-vragen');
+                if (nog) {
+                    var rest = zichtbaar.length - j;
+                    nog.hidden = j < Math.floor(zichtbaar.length / 2);
+                    nog.textContent = rest === 1 ? 'Laatste vraag' : 'Nog ' + rest + ' vragen';
+                }
             });
             if (tekst) tekst.textContent = klaar + ' van ' + zichtbaar.length + ' vragen beantwoord';
             bouwSlinger(zichtbaar.length);

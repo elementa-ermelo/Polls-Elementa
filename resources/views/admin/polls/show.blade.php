@@ -113,7 +113,7 @@ function showTab(tab) {
                     <div style="flex:1; min-width:0;">
                         <p style="margin:0 0 4px; font-weight:600; font-size:15px;">{{ $question->question }}</p>
                         <p class="meta" style="margin:0; font-size:13px;">
-                            {{ $question->type }} &bull; {{ $question->options->count() }} opties &bull; {{ $question->votes->whereNotNull('confirmed_at')->count() }} bevestigde stemmen
+                            {{ $question->type }} &bull; {{ $question->options->count() }} opties &bull; {{ $question->votes->whereNotNull('confirmed_at')->unique('email')->count() }} bevestigde stemmen
                         </p>
                     </div>
                 </div>
@@ -214,7 +214,8 @@ function showTab(tab) {
     @endif
     @foreach($poll->questions as $qi => $question)
         @php
-            $qTotal = $question->votes->whereNotNull('confirmed_at')->count();
+            // inzenders, niet rijen: bij meerkeuze heeft een inzender een rij per vinkje
+            $qTotal = $question->votes->whereNotNull('confirmed_at')->unique('email')->count();
         @endphp
         <div style="{{ !$loop->first ? 'margin-top:24px; padding-top:20px; border-top:1px solid var(--line);' : '' }}">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
@@ -223,7 +224,7 @@ function showTab(tab) {
                 @php
                     $nietGevraagd = \App\Support\PollType::isOpenTextType($question->type) ? 0 : max(0, ($gefilterdeRespondenten ?? $totalRespondents) - $question->votes->unique('email')->count());
                 @endphp
-                <span class="meta" style="margin-left:auto; font-size:13px; white-space:nowrap;">{{ $qTotal }} stem{{ $qTotal !== 1 ? 'men' : '' }}@if($nietGevraagd > 0) &middot; {{ $nietGevraagd }} niet gevraagd @endif</span>
+                <span class="meta" style="margin-left:auto; font-size:13px; white-space:nowrap;">@if(\App\Support\PollType::isMultiple($question->type))meer antwoorden mogelijk &middot; @endif{{ $qTotal }} stem{{ $qTotal !== 1 ? 'men' : '' }}@if($nietGevraagd > 0) &middot; {{ $nietGevraagd }} niet gevraagd @endif</span>
             </div>
             @foreach($question->options as $option)
                 @php

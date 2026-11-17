@@ -20,11 +20,16 @@ class Stopregel
             return false;
         }
         $gekozen = $invoer['question_' . $q->id] ?? null;
-        if (! $gekozen || ! ctype_digit((string) $gekozen)) {
-            return false;
+        foreach (is_array($gekozen) ? $gekozen : [$gekozen] as $id) {
+            if (! is_scalar($id) || ! ctype_digit((string) $id)) {
+                continue;
+            }
+            $opt = $q->options->firstWhere('id', (int) $id);
+            if ($opt && $opt->label === $label) {
+                return true;
+            }
         }
-        $opt = $q->options->firstWhere('id', (int) $gekozen);
-        return $opt && $opt->label === $label;
+        return false;
     }
 
     /** Positie van de vraag waarbij de invuller het stopantwoord koos, of null. */

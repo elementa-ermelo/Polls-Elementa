@@ -49,6 +49,17 @@ class Vote extends Model
         return $this->belongsTo(PollOption::class, 'poll_option_id');
     }
 
+    /** Antwoord van een inzender op een vraag als tekst; bij meerkeuze alle gekozen opties. */
+    public static function antwoordTekst(\Illuminate\Support\Collection $votes, int $vraagId): ?string
+    {
+        $rijen = $votes->where('poll_question_id', $vraagId);
+        if ($rijen->isEmpty()) {
+            return null;
+        }
+        $labels = $rijen->sortBy(fn ($v) => $v->option?->position)->map(fn ($v) => $v->option?->label)->filter();
+        return $labels->isNotEmpty() ? $labels->implode(', ') : ($rijen->first()->open_answer ?? '');
+    }
+
     public function isConfirmed(): bool
     {
         return $this->confirmed_at !== null;

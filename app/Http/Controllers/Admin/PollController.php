@@ -335,10 +335,8 @@ HTML;
         foreach ($respondents as $respondent) {
             $answersHtml = '';
             foreach ($poll->questions as $question) {
-                $vote = $respondent['votes']->firstWhere('poll_question_id', $question->id);
-                $answer = $vote 
-                    ? ($vote->option?->label ?? $vote->open_answer ?? '(Geen antwoord)')
-                    : '(Niet beantwoord)';
+                $answer = \App\Models\Vote::antwoordTekst($respondent['votes'], $question->id);
+                $answer = $answer === null ? '(Niet beantwoord)' : ($answer === '' ? '(Geen antwoord)' : $answer);
                 
                 $answersHtml .= sprintf(
                     '<div class="answer"><div class="answer-q">%s</div>%s</div>',
@@ -824,12 +822,7 @@ HTML;
                 ];
 
                 foreach ($poll->questions as $question) {
-                    $vote = $respondent['votes']->firstWhere('poll_question_id', $question->id);
-                    if ($vote) {
-                        $row[] = $vote->option?->label ?? $vote->open_answer ?? '';
-                    } else {
-                        $row[] = '';
-                    }
+                    $row[] = \App\Models\Vote::antwoordTekst($respondent['votes'], $question->id) ?? '';
                 }
 
                 $row[] = $respondent['votes']->first()?->confirmed_at ? 'Bevestigd' : 'In afwachting';

@@ -241,13 +241,13 @@
             <div class="respondent-answers">
                 @forelse($poll->questions as $question)
                     @php
-                        $vote = $respondent['votes']->firstWhere('poll_question_id', $question->id);
+                        $antwoord = \App\Models\Vote::antwoordTekst($respondent['votes'], $question->id);
                     @endphp
                     <div class="answer-item">
                         <div class="answer-question">{{ $question->question }}</div>
                         <div class="answer-value">
-                            @if($vote)
-                                {{ $vote->option?->label ?? $vote->open_answer ?? '(Geen antwoord)' }}
+                            @if($antwoord !== null)
+                                {{ $antwoord !== '' ? $antwoord : '(Geen antwoord)' }}
                             @else
                                 <em>(Niet beantwoord)</em>
                             @endif

@@ -30,6 +30,13 @@ class StoreVoteRequest extends FormRequest
             $overslaan = in_array($question->id, $wegIds, true);
             if (PollType::isOpenTextType((string) $question->type)) {
                 $rules["question_{$question->id}"] = ['nullable', 'string', 'max:5000'];
+            } elseif (PollType::isMultiple((string) $question->type)) {
+                $rules["toelichting_{$question->id}"] = ['nullable', 'string', 'max:2000'];
+                $rules["question_{$question->id}"] = [($question->standaard_antwoord || $overslaan) ? 'nullable' : 'required', 'array', 'max:20'];
+                $rules["question_{$question->id}.*"] = [
+                    'integer',
+                    \Illuminate\Validation\Rule::exists('poll_options', 'id')->where('poll_question_id', $question->id),
+                ];
             } else {
                 // De gekozen optie moet bij DEZE vraag horen, niet bij een willekeurige andere.
                 $rules["toelichting_{$question->id}"] = ['nullable', 'string', 'max:2000'];

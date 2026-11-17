@@ -13,6 +13,7 @@ class PollType
     public const SCORE_1_10 = 'score_1_10';
     public const EVENT_DATES = 'event_dates';
     public const RANGE_BUCKETS = 'range_buckets';
+    public const MULTIPLE = 'multiple';
 
     public static function labels(): array
     {
@@ -26,6 +27,7 @@ class PollType
             self::SCORE_1_10 => 'Cijfers 1-10',
             self::EVENT_DATES => 'Event poll met data',
             self::RANGE_BUCKETS => 'Bereik-categorieen (bijv. 1-5 jaar)',
+            self::MULTIPLE => 'Meerkeuze (meer antwoorden mogelijk)',
         ];
     }
 
@@ -48,6 +50,11 @@ class PollType
     public static function needsDateParsing(string $type): bool
     {
         return $type === self::EVENT_DATES;
+    }
+
+    public static function isMultiple(string $type): bool
+    {
+        return $type === self::MULTIPLE;
     }
 
     public static function isOpenTextType(string $type): bool

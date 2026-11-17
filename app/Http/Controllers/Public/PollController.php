@@ -173,8 +173,22 @@ class PollController extends Controller
                     $isOpenType = PollType::isOpenTextType((string) $question->type);
                     $option     = null;
                     $openAnswer = null;
+                    $extra      = collect(); // meerkeuze: de overige aangevinkte opties
 
-                    if (! $isOpenType) {
+                    if (PollType::isMultiple((string) $question->type)) {
+                        $ids = array_filter((array) $request->input("question_{$question->id}", []), fn ($id) => is_scalar($id) && ctype_digit((string) $id));
+                        $gekozen = $question->options()->whereKey($ids)->orderBy('position')->get();
+                        if ($gekozen->isEmpty() && $question->standaard_antwoord && ! $overgeslagen) {
+                            $gekozen = $question->options()->where('label', $question->standaard_antwoord)->get();
+                        }
+                        $option = $gekozen->first();
+                        $extra  = $gekozen->slice(1);
+                        $toelichting = trim($request->string("toelichting_{$question->id}")->toString());
+                        $openAnswer = $toelichting === '' ? null : $toelichting;
+                        // eerdere (onbevestigde) rijen van deze inzender bij deze vraag weg, anders blijven oude vinkjes staan
+                        Vote::query()->where('poll_id', $poll->id)->where('poll_question_id', $question->id)
+                            ->where('email', $email)->delete();
+                    } elseif (! $isOpenType) {
                         $optionId = $request->input("question_{$question->id}");
                         if ($optionId) {
                             $option = $question->options()->whereKey($optionId)->first();
@@ -222,14 +236,28 @@ class PollController extends Controller
                         $updateData['confirmed_at']         = null;
                     }
 
-                    Vote::query()->updateOrCreate(
-                        [
-                            'poll_id'          => $poll->id,
-                            'poll_question_id' => $question->id,
-                            'email'            => $email,
-                        ],
-                        $updateData
-                    );
+                    $sleutel = [
+                        'poll_id'          => $poll->id,
+                        'poll_question_id' => $question->id,
+                        'email'            => $email,
+                    ];
+                    // meerkeuze: oude rijen zijn al weg, de optie hoort in de sleutel; anders blijft het een rij per vraag
+                    if (PollType::isMultiple((string) $question->type)) {
+                        $sleutel['poll_option_id'] = $option?->id;
+                    }
+                    Vote::query()->updateOrCreate($sleutel, $updateData);
+
+                    // meerkeuze: een rij per extra vinkje, zonder toelichting en zonder bevestigingstoken (die is uniek)
+                    foreach ($extra as $o) {
+                        Vote::query()->create(array_merge($updateData, [
+                            'poll_id'            => $poll->id,
+                            'poll_question_id'   => $question->id,
+                            'poll_option_id'     => $o->id,
+                            'numeric_value'      => is_numeric($o->value) ? (int) $o->value : null,
+                            'open_answer'        => null,
+                            'confirmation_token' => null,
+                        ]));
+                    }
                 }
             });
         } catch (Throwable $e) {
